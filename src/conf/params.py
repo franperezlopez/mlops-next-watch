@@ -1,0 +1,3 @@
+SERVE = 0.90
+TRAIN = 0.80
+SEED = 42

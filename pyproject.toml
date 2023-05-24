@@ -1,0 +1,23 @@
+[project]
+name="nextwatch"
+version="0.1.0"
+description="MLOps project for movie recommendations."
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Black formatting
+[tool.black]
+line-length = 90
+include = '\.pyi?$'
+
+# iSort
+[tool.isort]
+profile = "black"
+line_length = 79
+multi_line_output = 3
+include_trailing_comma = true
