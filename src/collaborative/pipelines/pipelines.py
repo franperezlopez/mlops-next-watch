@@ -49,7 +49,18 @@ class Pipelines:
 
         return train, serve
 
-    def data_science(self, dataset: DataFrame):
+    def data_science(self, dataset: DataFrame = None):
+        if dataset is None:
+            dataset = self.session.read.parquet(
+                catalog.get_dataset_path(
+                    catalog.Paths.DATA_03PROCESSED,
+                    self.source,
+                    catalog.DatasetType.TRAIN,
+                    catalog.Datasets.RATINGS,
+                    suffix=catalog.FileFormat.PARQUET,
+                    as_string=True,
+                )
+            )
         train, val = data_science_nodes.split_train_test(dataset)
         best_trial = data_science_nodes.hyperparam_opt_als(train, val)
 
