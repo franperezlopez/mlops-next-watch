@@ -16,7 +16,6 @@ class Pipelines:
         weights: list[float] = [1 - params.SERVE, params.SERVE],
         seed: int = params.SEED,
     ):
-
         datasets = pre_processing_nodes.make_raw_datasets(
             self.session,
             self.source,
@@ -37,7 +36,7 @@ class Pipelines:
             datasets[catalog.Datasets.RATINGS][catalog.DatasetType.TRAIN],
             catalog.Datasets.RATINGS,
             catalog.DatasetType.TRAIN,
-            globals.DROP_TIMESTAMP,
+            *globals.DROP_COLUMNS,
         )
 
         serve = pre_processing_nodes.drop_columns(
@@ -45,7 +44,7 @@ class Pipelines:
             datasets[catalog.Datasets.RATINGS][catalog.DatasetType.SERVE],
             catalog.Datasets.RATINGS,
             catalog.DatasetType.SERVE,
-            globals.DROP_TIMESTAMP,
+            *globals.DROP_COLUMNS,
         )
 
         return train, serve

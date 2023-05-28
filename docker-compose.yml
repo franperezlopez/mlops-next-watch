@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    restart: always
+    image: postgres
+    container_name: postgres-db
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    networks:
+      - backend
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE}
+    volumes:
+      - ./docker/postgres/postgres-data:/var/lib/postgresql/data/
+  
+  create-mlflow-db:
+    image: postgres
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - PGUSER=${POSTGRES_USER}
+      - PGHOST=postgres
+    command: >
+      bash -c '
+      until psql -h postgres -U ${POSTGRES_USER} -c "SELECT 1" > /dev/null 2>&1; do
+        sleep 1;
+      done;
+      psql -h postgres -U ${POSTGRES_USER} -c "CREATE DATABASE ${POSTGRES_DATABASE}"; 
+      '
+
+  minio:
+    image: minio/minio
+    ports:
+      - "${MINIO_PORT_SERVER}:${MINIO_PORT_SERVER}"
+      - "${MINIO_PORT_CONSOLE}:${MINIO_PORT_CONSOLE}"
+    networks:
+      - backend
+      - frontend
+    command: >
+      server /data 
+      --console-address :${MINIO_PORT_CONSOLE} 
+      --address :${MINIO_PORT_SERVER}
+    environment:  
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_ACCESS_KEY}
+    volumes:
+      - ./docker/minio/minio-data:/data
+
+  create-buckets:
+    image: minio/mc:latest
+    container_name: minio-create-buckets
+    depends_on:
+      - minio
+    networks:
+      - backend
+    entrypoint: >
+      /bin/sh -c '
+      sleep 5;
+      /usr/bin/mc config host add s3 http://minio:${MINIO_PORT_SERVER} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_ACCESS_KEY} --api S3v4;
+      [[ ! -z "`/usr/bin/mc ls s3 | grep challenge`" ]] || /usr/bin/mc mb s3/${MLFLOW_BUCKET_NAME};
+      /usr/bin/mc policy download s3/${MLFLOW_BUCKET_NAME};
+      [[ ! -z "`/usr/bin/mc ls s3 | grep challenge`" ]] || /usr/bin/mc mb s3/${RAW_DATA_BUCKET_NAME};
+      /usr/bin/mc policy download s3/${RAW_DATA_BUCKET_NAME};
+      exit 0;
+      '
+
+  mlflow:
+    restart: always
+    build: ./docker/mlflow
+    image: mlflow-server
+    container_name: mlflow-server
+    ports:
+      - "${MLFLOW_PORT}:${MLFLOW_PORT}" # exposed port : target port:
+    networks:
+      - backend
+      - frontend
+    environment: 
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:${MINIO_PORT_SERVER}
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY}
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+      --host 0.0.0.0
+      --default-artifact-root s3a://${MLFLOW_BUCKET_NAME}
+
+volumes:
+  mlflow-data:
+    driver: local
+  minio-data:
+    driver: local
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
