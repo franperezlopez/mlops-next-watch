@@ -89,6 +89,15 @@ data/**/*
 # Mypy cache
 .mypy_cache/
 
+# Docker folder
+docker/**/*-data/
+
+# Hadoop jar
+docker/mlflow/*.jar
+
+# Ignore "old/" folders
+old/
+
 # Keep data directories structure
 !data/**/
 !data/**/.gitkeep
