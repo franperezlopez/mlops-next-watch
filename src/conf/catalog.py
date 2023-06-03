@@ -13,6 +13,7 @@ class Paths:
     DATA_01RAW = DATA / "01-raw"
     DATA_O2INTERMEDIATE = DATA / "02-intermediate"
     DATA_03PROCESSED = DATA / "03-processed"
+    ENV = BASE / ".env"
 
 
 class Sources:

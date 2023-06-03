@@ -11,11 +11,6 @@ columns to drop
 """
 DROP_COLUMNS = ["timestamp"]
 
-"""
-.env location
-"""
-ENV_PATH = catalog.Paths.BASE / ".env"
-
 
 class MLflow:
     """
@@ -28,3 +23,15 @@ class MLflow:
     ALS_MODEL_ARTIFACT_PATH: str = "als_model"
     ALS_RUN_NAME: str = "ALS HyperParam Optimization"
     ALS_REGISTERED_MODEL_NAME: str = "spark_als_model"
+    ALS_METRIC = "rmse"
+
+
+class Pipelines:
+    """
+    Pipeline Names
+    """
+
+    DATA_SCIENCE = "ds"
+    DATA_ENGINEERING = "de"
+    DS = "ds"
+    DE = "de"
