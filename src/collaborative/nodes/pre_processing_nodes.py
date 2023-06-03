@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pyspark.sql import DataFrame, SparkSession
 
-from conf import catalog, params
+from conf import catalog, params, paths
 
 
 def make_raw_datasets(
@@ -14,7 +14,7 @@ def make_raw_datasets(
     weights: list[float],
     seed: int,
 ) -> dict[str, dict[str, DataFrame]]:
-    raw_path: Path = catalog.get_dataset_path(catalog.Paths.DATA_01RAW, source)
+    raw_path: Path = paths.get_path(paths.DATA_01RAW, source)
 
     if not raw_path.is_dir():
         catalog.create_raw_dataset(source)
@@ -46,8 +46,8 @@ def drop_columns(
     source: str, dataset: DataFrame, dataset_name: str, dataset_type: str, *columns
 ):
     dataset = dataset.drop(*columns)
-    processed_dataset_path = catalog.get_dataset_path(
-        catalog.Paths.DATA_03PROCESSED,
+    processed_dataset_path = paths.get_path(
+        paths.DATA_03PROCESSED,
         source,
         dataset_type,
         dataset_name,
@@ -67,8 +67,8 @@ def _make_raw_file(
     weights: list[float],
     seed: int,
 ):
-    ext_filepath = catalog.get_dataset_path(
-        catalog.Paths.DATA_01EXTERNAL,
+    ext_filepath = paths.get_path(
+        paths.DATA_01EXTERNAL,
         source,
         dataset_name,
         suffix=from_format,
@@ -81,8 +81,8 @@ def _make_raw_file(
 
     train, serve = dataset.randomSplit(weights, seed=seed)
 
-    raw_train_filepath = catalog.get_dataset_path(
-        catalog.Paths.DATA_01RAW,
+    raw_train_filepath = paths.get_path(
+        paths.DATA_01RAW,
         source,
         catalog.DatasetType.TRAIN,
         dataset_name,
@@ -90,8 +90,8 @@ def _make_raw_file(
         as_string=True,
     )
 
-    raw_serve_filepath = catalog.get_dataset_path(
-        catalog.Paths.DATA_01RAW,
+    raw_serve_filepath = paths.get_path(
+        paths.DATA_01RAW,
         source,
         catalog.DatasetType.SERVE,
         dataset_name,

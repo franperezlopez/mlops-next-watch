@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame, SparkSession
 
 from collaborative.nodes import data_science_nodes, pre_processing_nodes
-from conf import catalog, globals, params
+from conf import catalog, globals, params, paths
 
 
 class Pipelines:
@@ -52,8 +52,8 @@ class Pipelines:
     def data_science(self, dataset: DataFrame = None):
         if dataset is None:
             dataset = self.session.read.parquet(
-                catalog.get_dataset_path(
-                    catalog.Paths.DATA_03PROCESSED,
+                paths.get_path(
+                    paths.DATA_03PROCESSED,
                     self.source,
                     catalog.DatasetType.TRAIN,
                     catalog.Datasets.RATINGS,
