@@ -8,12 +8,9 @@ from pyspark.sql import DataFrame
 from conf import globals, params
 
 
-def split_train_test(dataset: DataFrame):
-    train, test = dataset.randomSplit([params.TRAIN, 1 - params.TRAIN], seed=42)
-    return train, test
+def _train_als(train, val):
+    """Where the train is taken..."""
 
-
-def train_als(train, val):
     def train_wrapper(params):
         with mlflow.start_run(nested=True):
             mlflow.set_tags(
@@ -35,7 +32,9 @@ def train_als(train, val):
             )
 
             evaluator = RegressionEvaluator(
-                metricName="rmse", labelCol="rating", predictionCol="prediction"
+                metricName=globals.MLflow.ALS_METRIC,
+                labelCol="rating",
+                predictionCol="prediction",
             )
 
             als_model = Pipeline(stages=[als])
@@ -44,21 +43,77 @@ def train_als(train, val):
 
             predictions = model.transform(val)
 
-            rmse = evaluator.evaluate(predictions)
+            metric = evaluator.evaluate(predictions)
 
-            mlflow.log_metric("rmse", rmse)
+            mlflow.log_metric(globals.MLflow.ALS_METRIC, metric)
             mlflow.spark.log_model(
                 model,
                 globals.MLflow.ALS_MODEL_ARTIFACT_PATH,
-                registered_model_name=globals.MLflow.ALS_REGISTERED_MODEL_NAME,
             )
 
-            return {"loss": rmse, "params": params, "status": STATUS_OK}
+            return {"loss": metric, "params": params, "status": STATUS_OK}
 
     return train_wrapper
 
 
-def hyperparam_opt_als(train, val):
+def _log_best_trial(
+    run: mlflow.entities.Run, trials: Trials
+) -> tuple[mlflow.tracking.MlflowClient, str, dict]:
+    """Log the best trial
+    Args:
+        run (mlflow.entities.Run): An MLflow Run Object
+        trials (Trials): all trials from hyperopt
+    """
+    client = mlflow.tracking.MlflowClient()
+    best_trial_params = sorted(trials.results, key=lambda result: result["loss"])[0]
+
+    runs = client.search_runs(
+        [run.info.experiment_id], f"tags.mlflow.parentRunId = '{run.info.run_id}'"
+    )
+    best_run = min(runs, key=lambda run: run.data.metrics[globals.MLflow.ALS_METRIC])
+    best_run_id = best_run.info.run_id
+    mlflow.set_tag("best_run", best_run_id)
+    mlflow.log_metric("best_metric", best_run.data.metrics[globals.MLflow.ALS_METRIC])
+    mlflow.log_dict(
+        best_trial_params, "best_params.json"
+    )  # TODO: Change to log_params...
+
+    return client, best_run_id, best_trial_params
+
+
+def _register_best_model(client: mlflow.tracking.MlflowClient, run_id: str):
+    model_version = mlflow.register_model(
+        f"runs:/{run_id}/{globals.MLflow.ALS_MODEL_ARTIFACT_PATH}",
+        globals.MLflow.ALS_REGISTERED_MODEL_NAME,
+    )
+    client.transition_model_version_stage(
+        name=globals.MLflow.ALS_REGISTERED_MODEL_NAME,
+        version=model_version.version,
+        stage="Staging",
+        archive_existing_versions=True,
+    )
+
+
+def split_train_test(dataset: DataFrame) -> tuple[DataFrame, DataFrame]:
+    """Splits the training data into train and test sets
+
+    Args:
+        dataset (DataFrame): A `Spark` `DataFrame` containing the data set
+
+    Returns:
+        tuple[DataFrame, DataFrame]: A tuple consisting of a train DataFrame and a test DataFrame
+    """
+    train, test = dataset.randomSplit([params.TRAIN, 1 - params.TRAIN], seed=42)
+    return train, test
+
+
+def hyperparam_opt_als(train: DataFrame, val: DataFrame) -> dict:
+    """Performs hyper-parameter optimization
+
+    Args:
+        train (DataFrame): A `Spark` `DataFrame` containing the training set
+
+    """
     trials = Trials()  # TODO: use `SparkTrials`` distribute trials to the workers
 
     rank = params.ALS.RANK
@@ -73,15 +128,22 @@ def hyperparam_opt_als(train, val):
         "max_iter": hp.choice("max_iter", max_iter),
     }
 
+    # Start Hyper-Parameter Optimization
     with mlflow.start_run(run_name=globals.MLflow.ALS_RUN_NAME) as run:
         best = fmin(
-            fn=train_als(train=train, val=val),
+            fn=_train_als(train=train, val=val),
             space=space_search,
             algo=tpe.suggest,
             max_evals=5,
             trials=trials,
         )
 
-        best_trial = sorted(trials.results, key=lambda result: result["loss"])[0]
-        mlflow.log_dict(best_trial, "best_params.json")  # TODO: Change to log_params...
-        return best_trial
+        # Log best trail/run
+        client, best_run_id, best_trial_params = _log_best_trial(run, trials)
+
+        # Register best model in Mlflow Model Registry
+        _register_best_model(client, best_run_id)
+
+        return best_trial_params
+
+        # registered_model_name=globals.MLflow.ALS_REGISTERED_MODEL_NAME,
