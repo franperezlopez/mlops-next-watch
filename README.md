@@ -3,6 +3,7 @@ Next Watch
 
 MLOps  MLOps project for movie recommendations.
 
+<! --
 Project Organization
 ------------
 
@@ -53,5 +54,7 @@ Project Organization
 
 
 --------
+-->
+<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. 
 
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+<!-- #cookiecutterdatascience</small></p> -->
