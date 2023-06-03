@@ -3,7 +3,7 @@ Next Watch
 
 MLOps  MLOps project for movie recommendations.
 
-<! --
+<!--
 Project Organization
 ------------
 
