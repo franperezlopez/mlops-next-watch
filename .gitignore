@@ -98,6 +98,9 @@ docker/mlflow/*.jar
 # Ignore "old/" folders
 old/
 
+# Mlflow stuff
+mlruns/
+
 # Keep data directories structure
 !data/**/
 !data/**/.gitkeep
