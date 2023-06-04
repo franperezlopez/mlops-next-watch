@@ -101,6 +101,10 @@ old/
 # Mlflow stuff
 mlruns/
 
+# logs
+logs/*
+
 # Keep data directories structure
-!data/**/
-!data/**/.gitkeep
+#!data/**/
+#!data/**/.gitkeep
+!**/.gitkeep
