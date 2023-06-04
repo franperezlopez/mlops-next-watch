@@ -1,4 +1,5 @@
 import logging
+import logging.config
 import os
 
 import click
@@ -7,7 +8,7 @@ from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 
 from collaborative.pipelines.pipelines import Pipelines
-from conf import catalog, globals
+from conf import catalog, globals, paths
 
 
 @click.command()
@@ -37,8 +38,8 @@ def main(pipelines_to_run: str, experiment_name: str):
         experiment_name (str): set an experiment name
     """
     logger = logging.getLogger(__name__)
-    # logging.getLogger("mlflow").setLevel(logging.DEBUG)
-    # logging.getLogger("pyspark").setLevel(logging.DEBUG)
+    logging.getLogger("mlflow").setLevel(logging.DEBUG)
+    logging.getLogger("pyspark").setLevel(logging.DEBUG)
     logger.info("Running Next-Watch")
 
     spark = (
@@ -76,11 +77,12 @@ def main(pipelines_to_run: str, experiment_name: str):
 
 if __name__ == "__main__":
     # set time format for logger
-    log_ts = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    logging.basicConfig(level=logging.INFO, format=log_ts)
+    path_logging = paths.get_path(paths.BASE, globals.Logs.CONFIG_FILE)
+    print(paths.get_path(paths.BASE, globals.Logs.CONFIG_FILE))
+    logging.config.fileConfig(path_logging)
 
     # load environment variables
-    load_dotenv("../.env")
+    load_dotenv(paths.ENV)
 
     # run `main`
     main()

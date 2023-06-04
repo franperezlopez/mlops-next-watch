@@ -35,3 +35,9 @@ class Pipelines:
     DATA_ENGINEERING = "de"
     DS = "ds"
     DE = "de"
+
+
+class Logs:
+    CONFIG_FILE = "logging.config"
+    ERROR_FILE = "error.log"
+    INFO_FILE = "info.log"
