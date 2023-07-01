@@ -108,3 +108,10 @@ logs/*
 #!data/**/
 #!data/**/.gitkeep
 !**/.gitkeep
+
+
+# Ignore unused dirs (to remove bloated proj **for now**)
+docs/
+references/
+reports/
+models/
