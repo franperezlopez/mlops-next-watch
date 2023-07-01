@@ -27,7 +27,7 @@ def make_raw_datasets(
         )
         returns[dataset_name] = {
             catalog.DatasetType.TRAIN: train,
-            catalog.DatasetType.SERVE: serve,
+            catalog.DatasetType.RAW: serve,
         }
         return returns
     else:
@@ -37,7 +37,7 @@ def make_raw_datasets(
             )
             returns[dn] = {
                 catalog.DatasetType.TRAIN: train,
-                catalog.DatasetType.SERVE: serve,
+                catalog.DatasetType.RAW: serve,
             }
         return returns
 
@@ -93,7 +93,7 @@ def _make_raw_file(
     raw_serve_filepath = paths.get_path(
         paths.DATA_01RAW,
         source,
-        catalog.DatasetType.SERVE,
+        catalog.DatasetType.RAW,
         dataset_name,
         suffix=to_format,
         as_string=True,

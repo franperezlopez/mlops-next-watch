@@ -3,7 +3,7 @@ Training Parameters
 """
 
 # Serve data percentage
-SERVE: float = 0.90
+RAW: float = 0.10
 
 # Training data percentage
 TRAIN: float = 0.80

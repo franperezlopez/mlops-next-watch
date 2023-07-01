@@ -13,7 +13,7 @@ class Pipelines:
         self,
         from_format: str = catalog.FileFormat.CSV,
         to_format: str = catalog.FileFormat.PARQUET,
-        weights: list[float] = [1 - params.SERVE, params.SERVE],
+        weights: list[float] = [params.RAW, 1 - params.RAW],
         seed: int = params.SEED,
     ):
         datasets = pre_processing_nodes.make_raw_datasets(
@@ -41,9 +41,9 @@ class Pipelines:
 
         serve = pre_processing_nodes.drop_columns(
             self.source,
-            datasets[catalog.Datasets.RATINGS][catalog.DatasetType.SERVE],
+            datasets[catalog.Datasets.RATINGS][catalog.DatasetType.RAW],
             catalog.Datasets.RATINGS,
-            catalog.DatasetType.SERVE,
+            catalog.DatasetType.RAW,
             *globals.DROP_COLUMNS,
         )
 
