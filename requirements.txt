@@ -5,7 +5,8 @@
 click
 Sphinx
 coverage
-awscli
+# awscli
+boto3==1.26
 flake8
 black
 isort
