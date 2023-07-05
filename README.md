@@ -2,7 +2,16 @@ Next Watch
 ==============================
 
 MLOps  MLOps project for movie recommendations.
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <h3 align="center">Next-Watch: Movie Recommendations</h3>
 
+  <p align="center">
+    A MLOps project for movie recommendations!
+    <br />
+  </p>
+</div>
 <!--
 Project Organization
 ------------
