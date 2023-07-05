@@ -1,7 +1,7 @@
-Next Watch
+<!-- Next Watch
 ==============================
 
-MLOps  MLOps project for movie recommendations.
+MLOps  MLOps project for movie recommendations. -->
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
