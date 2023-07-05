@@ -1,4 +1,4 @@
-.PHONY: clean lint requirements format sort
+.PHONY: clean lint requirements format sort gen-global-requirements
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -24,8 +24,13 @@ endif
 ## Install Python Dependencies
 requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	$(PYTHON_INTERPRETER) -m pip install -r requirements.local
+	$(PYTHON_INTERPRETER) -m pip install -r requirements.dist
 	sudo curl -o ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/hadoop-aws-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar
+
+## Generate requirements for distributable packages
+gen_dist_requirements:
+	pip list --format=freeze > requirements.dist
 
 ## Delete all compiled Python files
 clean:
