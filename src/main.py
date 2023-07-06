@@ -68,9 +68,11 @@ def main(pipelines_to_run: str, experiment_name: str):
 
     pipelines = Pipelines(spark, catalog.Sources.MOVIELENS)
 
+    print(pipelines_to_run)
     for p in pipelines_to_run:
+        print(p)
         if p == globals.Pipelines.DATA_ENGINEERING:
-            train, serve = pipelines.data_engineering()
+            pipelines.data_engineering()
         if p == globals.Pipelines.DATA_SCIENCE:
             pipelines.data_science()
 

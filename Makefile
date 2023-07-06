@@ -32,6 +32,10 @@ requirements: test_environment
 gen_dist_requirements:
 	pip list --format=freeze > requirements.dist
 
+## Run the project
+run:
+	python3 src/main.py
+
 ## Delete all compiled Python files
 clean:
 	find . -type f -name "*.py[co]" -delete

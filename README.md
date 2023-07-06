@@ -2,16 +2,40 @@
 ==============================
 
 MLOps  MLOps project for movie recommendations. -->
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
-  <h3 align="center">Next-Watch: Movie Recommendations</h3>
 
-  <p align="center">
-    A MLOps project for movie recommendations!
-    <br />
-  </p>
-</div>
+## Next Wacth
+
+A MLOps project for movie recommendations!
+
+## Prerequisites
+- Python
+- Conda | Venv
+
+## Installation
+1. Clone the repo
+```sh
+git clone https://github.com/brnaguiar/mlops-next-watch.git
+```
+
+2. Create environment
+```sh
+make create_environment
+```
+
+3. Install requirements
+```sh
+make requirements
+```
+
+4. Create a `.env` file (`.env` sample below)
+
+5. Run the the project!
+```sh
+make run
+```
+
+#
+<!-- PROJECT LOGO -->
 <!--
 Project Organization
 ------------

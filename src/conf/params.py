@@ -2,11 +2,11 @@
 Training Parameters
 """
 
-# Serve data percentage
-RAW: float = 0.10
+# Raw train/prod data percentage
+RAW: float = 0.05  # 0.10
 
 # Training data percentage
-TRAIN: float = 0.80
+TRAIN: float = 0.60  # 0.80
 
 SEED: int = 42
 

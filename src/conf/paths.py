@@ -1,16 +1,18 @@
+import os
 from pathlib import Path
 
 """
 Paths for the Next Watch project
 """
 
-BASE = Path(__file__).parent.parent.parent.absolute()
+BASE = Path(__file__).parent.parent.parent.absolute()  # 
 SRC = BASE / "src"
 DATA = BASE / "data"
 DATA_01EXTERNAL = DATA / "01-external"
 DATA_01RAW = DATA / "01-raw"
 DATA_O2INTERMEDIATE = DATA / "02-intermediate"
 DATA_03PROCESSED = DATA / "03-processed"
+DATA_04TRAIN = DATA / "04-train"
 LOGS = BASE / "logs"
 ENV = BASE / ".env"
 

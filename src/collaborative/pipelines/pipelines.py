@@ -16,7 +16,7 @@ class Pipelines:
         weights: list[float] = [params.RAW, 1 - params.RAW],
         seed: int = params.SEED,
     ):
-        datasets = pre_processing_nodes.make_raw_datasets(
+        pre_processing_nodes.make_raw_datasets(
             self.session,
             self.source,
             [
@@ -31,37 +31,22 @@ class Pipelines:
             seed,
         )
 
-        train = pre_processing_nodes.drop_columns(
+        pre_processing_nodes.drop_columns(
+            self.session,
             self.source,
-            datasets[catalog.Datasets.RATINGS][catalog.DatasetType.TRAIN],
             catalog.Datasets.RATINGS,
             catalog.DatasetType.TRAIN,
             *globals.DROP_COLUMNS,
         )
 
-        serve = pre_processing_nodes.drop_columns(
+        pre_processing_nodes.drop_columns(
+            self.session,
             self.source,
-            datasets[catalog.Datasets.RATINGS][catalog.DatasetType.RAW],
             catalog.Datasets.RATINGS,
-            catalog.DatasetType.RAW,
+            catalog.DatasetType.PROD,
             *globals.DROP_COLUMNS,
         )
 
-        return train, serve
-
-    def data_science(self, dataset: DataFrame = None):
-        if dataset is None:
-            dataset = self.session.read.parquet(
-                paths.get_path(
-                    paths.DATA_03PROCESSED,
-                    self.source,
-                    catalog.DatasetType.TRAIN,
-                    catalog.Datasets.RATINGS,
-                    suffix=catalog.FileFormat.PARQUET,
-                    as_string=True,
-                )
-            )
-        train, val = data_science_nodes.split_train_test(dataset)
-        best_trial = data_science_nodes.hyperparam_opt_als(train, val)
-
-        print(best_trial)
+    def data_science(self):
+        data_science_nodes.split_train_test(self.session, self.source)
+        data_science_nodes.hyperparam_opt_als(self.session, self.source)

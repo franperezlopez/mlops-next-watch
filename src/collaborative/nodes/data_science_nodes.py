@@ -3,9 +3,9 @@ from hyperopt import STATUS_OK, Trials, fmin, hp, tpe
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.recommendation import ALS
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 
-from conf import globals, params
+from conf import catalog, globals, params, paths
 
 
 def _train_als(train, val):
@@ -94,20 +94,42 @@ def _register_best_model(client: mlflow.tracking.MlflowClient, run_id: str):
     )
 
 
-def split_train_test(dataset: DataFrame) -> tuple[DataFrame, DataFrame]:
-    """Splits the training data into train and test sets
-
-    Args:
-        dataset (DataFrame): A `Spark` `DataFrame` containing the data set
-
-    Returns:
-        tuple[DataFrame, DataFrame]: A tuple consisting of a train DataFrame and a test DataFrame
-    """
+def split_train_test(session: SparkSession, source: str):
+    """Splits the training data into train and test sets"""
+    dataset = session.read.parquet(
+        paths.get_path(
+            paths.DATA_03PROCESSED,
+            source,
+            catalog.DatasetType.TRAIN,
+            catalog.Datasets.RATINGS,
+            suffix=catalog.FileFormat.PARQUET,
+            as_string=True,
+        )
+    )
     train, test = dataset.randomSplit([params.TRAIN, 1 - params.TRAIN], seed=42)
-    return train, test
+    train.write.mode("overwrite").parquet(
+        paths.get_path(
+            paths.DATA_04TRAIN,
+            source,
+            catalog.DatasetType.TRAIN,
+            catalog.Datasets.RATINGS,
+            suffix=catalog.FileFormat.PARQUET,
+            as_string=True,
+        )
+    )
+    test.write.mode("overwrite").parquet(
+        paths.get_path(
+            paths.DATA_04TRAIN,
+            source,
+            catalog.DatasetType.TEST,
+            catalog.Datasets.RATINGS,
+            suffix=catalog.FileFormat.PARQUET,
+            as_string=True,
+        )
+    )
 
 
-def hyperparam_opt_als(train: DataFrame, val: DataFrame) -> dict:
+def hyperparam_opt_als(session: SparkSession, source: str):
     """Performs hyper-parameter optimization
 
     Args:
@@ -128,6 +150,26 @@ def hyperparam_opt_als(train: DataFrame, val: DataFrame) -> dict:
         "max_iter": hp.choice("max_iter", max_iter),
     }
 
+    train = session.read.parquet(
+        paths.get_path(
+            catalog.paths.DATA_04TRAIN,
+            source,
+            catalog.DatasetType.TRAIN,
+            catalog.Datasets.RATINGS,
+            suffix=catalog.FileFormat.PARQUET,
+            as_string=True,
+        )
+    )
+    val = session.read.parquet(
+        paths.get_path(
+            catalog.paths.DATA_04TRAIN,
+            source,
+            catalog.DatasetType.TEST,
+            catalog.Datasets.RATINGS,
+            suffix=catalog.FileFormat.PARQUET,
+            as_string=True,
+        )
+    )
     # Start Hyper-Parameter Optimization
     with mlflow.start_run(run_name=globals.MLflow.ALS_RUN_NAME) as run:
         best = fmin(
@@ -143,7 +185,3 @@ def hyperparam_opt_als(train: DataFrame, val: DataFrame) -> dict:
 
         # Register best model in Mlflow Model Registry
         _register_best_model(client, best_run_id)
-
-        return best_trial_params
-
-        # registered_model_name=globals.MLflow.ALS_REGISTERED_MODEL_NAME,

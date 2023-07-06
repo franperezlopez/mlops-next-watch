@@ -40,7 +40,7 @@ class DatasetType:
 
     TRAIN = "train"
     TEST = "test"
-    RAW = "raw"
+    PROD = "prod"
 
 
 def create_external_dataset(source: str):

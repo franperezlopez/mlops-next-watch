@@ -13,7 +13,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DATABASE=${POSTGRES_DATABASE}
+      - POSTGRES_DATABASE=${POSTGRES_MLFLOW_DATABASE}
     volumes:
       - ./docker/postgres/postgres-data:/var/lib/postgresql/data/
   
@@ -32,7 +32,7 @@ services:
       until psql -h postgres -U ${POSTGRES_USER} -c "SELECT 1" > /dev/null 2>&1; do
         sleep 1;
       done;
-      psql -h postgres -U ${POSTGRES_USER} -c "CREATE DATABASE ${POSTGRES_DATABASE}"; 
+      psql -h postgres -U ${POSTGRES_USER} -c "CREATE DATABASE ${POSTGRES_MLFLOW_DATABASE}"; 
       '
 
   minio:
@@ -87,7 +87,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY}
     command: >
       mlflow server
-      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_MLFLOW_DATABASE}
       --host 0.0.0.0
       --default-artifact-root s3a://${MLFLOW_BUCKET_NAME}
 
