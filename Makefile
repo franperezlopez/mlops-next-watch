@@ -32,6 +32,11 @@ requirements: test_environment
 gen_dist_requirements:
 	pip list --format=freeze > requirements.dist
 
+## Config databases, init programs, etc...
+init:
+	docker compose up postgres create-databases
+	docker compose up airflow-init
+	docker compose down --volumes --remove-orphans 
 ## Run the project
 run:
 	python3 src/main.py
