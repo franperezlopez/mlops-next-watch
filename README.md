@@ -4,7 +4,7 @@
 MLOps  MLOps project for movie recommendations. -->
 
 ## Next Wacth
-<img src="images/nextwatch.png" alt="Logo" width="80" height="80">
+<img src="images/nextwatch.png" alt="Logo" width="150" height="90">
 A MLOps project for movie recommendations!
 
 ## Prerequisites
