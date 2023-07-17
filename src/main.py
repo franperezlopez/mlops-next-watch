@@ -7,8 +7,8 @@ import mlflow
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 
-from collaborative.pipelines.pipelines import Pipelines
-from conf import catalog, globals, paths
+from collaborative.pipelines import pipelines
+from conf import catalog, globals, params, paths
 
 
 @click.command()
@@ -42,31 +42,30 @@ def main(pipelines_to_run: str, experiment_name: str):
     logging.getLogger("pyspark").setLevel(logging.DEBUG)
     logger.info("Running Next-Watch")
 
-    spark = (
-        SparkSession.builder.appName("Next Watch ML")
-        .master("local[3]")
-        # .config("spark.executor.memory", "3g")
-        .config("spark.driver.maxResultSize", "96g")
-        .config("spark.driver.memory", "96g")
-        .config("spark.executor.memory", "8g")
-        .config("packages", "org.apache.hadoop:hadoop-aws:3.3.4")
-        .config(
-            "spark.hadoop.fs.s3a.aws.credentials.provider",
-            "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider",
-        )
-        .config(
-            "spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem"
-        )  # mlflow doesn't support s3a
-        .config("spark.hadoop.fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .getOrCreate()
-    )
+    # spark = (
+    #    SparkSession.builder.appName("Next Watch ML")
+    #    .master("local[3]")
+    #    # .config("spark.executor.memory", "3g")
+    #    # .config("spark.driver.maxResultSize", "96g")
+    #    # .config("spark.driver.memory", "96g")
+    #    # .config("spark.executor.memory", "8g")
+    #    # .config("packages", "org.apache.hadoop:hadoop-aws:3.3.4")
+    #    # .config(
+    #    #    "spark.hadoop.fs.s3a.aws.credentials.provider",
+    #    #    "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider",
+    #    # )
+    #    # .config(
+    #    #    "spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem"
+    #    # )  # mlflow doesn't support s3a
+    #    # .config("spark.hadoop.fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    #    .config(map=params.Spark.py_config)
+    #    .getOrCreate()
+    # )
 
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     mlflow.set_experiment(experiment_name)
 
     mlflow.spark.autolog(disable=True)
-
-    pipelines = Pipelines(spark, catalog.Sources.MOVIELENS)
 
     print(pipelines_to_run)
     for p in pipelines_to_run:
@@ -79,12 +78,24 @@ def main(pipelines_to_run: str, experiment_name: str):
 
 if __name__ == "__main__":
     # set time format for logger
-    path_logging = paths.get_path(paths.BASE, globals.Logs.CONFIG_FILE)
-    print(paths.get_path(paths.BASE, globals.Logs.CONFIG_FILE))
+    path_logging = paths.get_path(globals.Logs.CONFIG_FILE)
+    print(path_logging)
     logging.config.fileConfig(path_logging)
 
     # load environment variables
-    load_dotenv(paths.ENV)
+
+    print(type(os.environ["DOCKER_RUNNING"]))
+    # print(
+    #    paths.DOCKER_ENV
+    #    if "DOCKER_RUNNING" in os.environ and os.environ["DOCKER_RUNNING"] == "true"
+    #    else paths.ENV
+    # )
+    load_dotenv(
+        paths.get_path(
+            paths.ENV,
+            storage=globals.Storage.HOST,
+        )
+    )
 
     # run `main`
     main()

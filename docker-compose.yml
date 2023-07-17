@@ -5,8 +5,10 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.6.2}
-  # build: .
+  build: 
+    context: ./
+    dockerfile: ./docker/airflow/Dockerfile
+  image: airflow #.${AIRFLOW_IMAGE_NAME:-apache/airflow:2.6.2}
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -116,14 +118,16 @@ services:
       /usr/bin/mc config host add s3 http://minio:${MINIO_PORT_SERVER} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_ACCESS_KEY} --api S3v4;
       [[ ! -z "`/usr/bin/mc ls s3 | grep challenge`" ]] || /usr/bin/mc mb s3/${MLFLOW_BUCKET_NAME};
       /usr/bin/mc policy download s3/${MLFLOW_BUCKET_NAME};
-      [[ ! -z "`/usr/bin/mc ls s3 | grep challenge`" ]] || /usr/bin/mc mb s3/${RAW_DATA_BUCKET_NAME};
-      /usr/bin/mc policy download s3/${RAW_DATA_BUCKET_NAME};
+      [[ ! -z "`/usr/bin/mc ls s3 | grep challenge`" ]] || /usr/bin/mc mb s3/${DATA_BUCKET_NAME};
+      /usr/bin/mc policy download s3/${DATA_BUCKET_NAME};
       exit 0;
       '
 
   mlflow:
     restart: always
-    build: ./docker/mlflow
+    build: 
+      context: ./
+      dockerfile:  ./docker/mlflow/Dockerfile
     image: mlflow-server
     container_name: mlflow-server
     ports:

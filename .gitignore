@@ -104,14 +104,18 @@ mlruns/
 # logs
 logs/*
 
+# Ignore unused dirs (to remove bloated proj **for now**)
+docs/
+references/
+reports/
+models/
+
+requirements.dist
+assets/*
+
 # Keep data directories structure
 #!data/**/
 #!data/**/.gitkeep
 !**/.gitkeep
 
 
-# Ignore unused dirs (to remove bloated proj **for now**)
-docs/
-references/
-reports/
-models/

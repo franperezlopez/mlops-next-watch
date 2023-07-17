@@ -1,14 +1,15 @@
 from pathlib import Path
+from typing import Union
 
 from pyspark.sql import DataFrame, SparkSession
 
-from conf import catalog, params, paths
+from conf import catalog, params, paths, globals
 
 
 def make_raw_datasets(
     session: SparkSession,
     source: str,
-    dataset_name: str | list[str],
+    dataset_name: Union[str, list[str]],
     from_format: str,
     to_format: str,
     weights: list[float],
@@ -41,6 +42,7 @@ def drop_columns(
         dataset_type,
         dataset_name,
         suffix=catalog.FileFormat.PARQUET,
+        storage=globals.Storage.S3,
         as_string=True,  # )
     )
     dataset = session.read.parquet(raw_datset_path)
@@ -51,6 +53,7 @@ def drop_columns(
         dataset_type,
         dataset_name,
         suffix=catalog.FileFormat.PARQUET,
+        storage=globals.Storage.S3,
         as_string=True,
     )
     dataset.write.mode("overwrite").parquet(processed_dataset_path)
@@ -85,17 +88,21 @@ def _make_raw_file(
         catalog.DatasetType.TRAIN,
         dataset_name,
         suffix=to_format,
+        storage=globals.Storage.S3,
         as_string=True,
     )
+    print(raw_train_filepath)
 
     raw_prod_filepath = paths.get_path(
         paths.DATA_01RAW,
         source,
-        catalog.DatasetType.PROD,
+        catalog.DatasetType.PRODUCTION,
         dataset_name,
         suffix=to_format,
+        storage=globals.Storage.S3,
         as_string=True,
     )
 
     train.write.mode("overwrite").parquet(raw_train_filepath)
+    print("SENT TO MINIO!!!!")
     prod.write.mode("overwrite").parquet(raw_prod_filepath)

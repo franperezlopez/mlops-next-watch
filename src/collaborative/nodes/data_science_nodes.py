@@ -103,6 +103,7 @@ def split_train_test(session: SparkSession, source: str):
             catalog.DatasetType.TRAIN,
             catalog.Datasets.RATINGS,
             suffix=catalog.FileFormat.PARQUET,
+            storage=globals.Storage.S3,
             as_string=True,
         )
     )
@@ -114,6 +115,7 @@ def split_train_test(session: SparkSession, source: str):
             catalog.DatasetType.TRAIN,
             catalog.Datasets.RATINGS,
             suffix=catalog.FileFormat.PARQUET,
+            storage=globals.Storage.S3,
             as_string=True,
         )
     )
@@ -124,6 +126,7 @@ def split_train_test(session: SparkSession, source: str):
             catalog.DatasetType.TEST,
             catalog.Datasets.RATINGS,
             suffix=catalog.FileFormat.PARQUET,
+            storage=globals.Storage.S3,
             as_string=True,
         )
     )
@@ -157,6 +160,7 @@ def hyperparam_opt_als(session: SparkSession, source: str):
             catalog.DatasetType.TRAIN,
             catalog.Datasets.RATINGS,
             suffix=catalog.FileFormat.PARQUET,
+            storage=globals.Storage.S3,
             as_string=True,
         )
     )
@@ -167,6 +171,7 @@ def hyperparam_opt_als(session: SparkSession, source: str):
             catalog.DatasetType.TEST,
             catalog.Datasets.RATINGS,
             suffix=catalog.FileFormat.PARQUET,
+            storage=globals.Storage.S3,
             as_string=True,
         )
     )

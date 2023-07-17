@@ -1,8 +1,8 @@
 # - stage 0 -
 FROM python:3.10-slim AS builder
 RUN apt-get update && apt-get install -y build-essential libpq-dev
-COPY requirements.txt .
-RUN pip install --user -r requirements.txt
+COPY docker/mlflow/requirements.txt .
+RUN pip install --user -r ./requirements.txt
 
 # - stage 1 -
 FROM python:3.10-slim

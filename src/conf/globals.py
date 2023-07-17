@@ -1,11 +1,3 @@
-from conf import catalog
-
-"""
-File Formats
-"""
-FROM_EXT_FORMAT = catalog.FileFormat.CSV
-TO_RAW_FORMAT = catalog.FileFormat.PARQUET
-
 """
 columns to drop
 """
@@ -38,6 +30,16 @@ class Pipelines:
 
 
 class Logs:
+    """
+    Log File Names
+    """
+
     CONFIG_FILE = "logging.config"
     ERROR_FILE = "error.log"
     INFO_FILE = "info.log"
+
+
+class Storage:
+    HOST = "host"
+    DOCKER = "docker"
+    S3 = "s3"
