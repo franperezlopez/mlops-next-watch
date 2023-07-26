@@ -8,7 +8,7 @@ PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
 PROJECT_NAME = next-watch-teste
-PYTHON_INTERPRETER = python3
+PYTHON_INTERPRETER = python3.9
 CONDA_FOLDER_NAME = conda
 
 ifeq (,$(shell which conda))
@@ -25,13 +25,14 @@ endif
 requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.minimal
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.dist
+	$(PYTHON_INTERPRETER) -m pip install -r requirements.local
 	sudo curl -o ./assets/hadoop-aws-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar
 	sudo curl -o ./assets/aws-java-sdk-bundle-1.12.506.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.506/aws-java-sdk-bundle-1.12.506.jar
 	sudo curl -o ./assets/hadoop-common-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar
-	cp ./assets/hadoop-aws-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
-	cp ./assets/aws-java-sdk-bundle-1.12.506.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
-	cp ./assets/hadoop-common-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
+	sudo curl -o ./assets/postgresql-42.6.0.jar https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
+	#cp ./assets/hadoop-aws-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
+	#cp ./assets/aws-java-sdk-bundle-1.12.506.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
+	#cp ./assets/hadoop-common-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
 
 ## Generate requirements for distributable packages.jar
 gen_dist_requirements:
@@ -41,8 +42,11 @@ gen_dist_requirements:
 init:
 	docker compose build --no-cache
 	docker compose up postgres create-databases
-	docker compose up airflow-init
-	docker compose down --volumes --remove-orphans 
+	cd src
+	python3.9 populate_db_with_users.py
+	cd ..
+	#docker compose up airflow-init
+	#docker compose down --volumes --remove-orphans 
 
 ## Run DE pipelines
 run-de:

@@ -2,8 +2,9 @@ from pathlib import Path
 from typing import Union
 
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import rand, split
 
-from conf import catalog, params, paths, globals
+from conf import catalog, globals, params, paths
 
 
 def make_raw_datasets(
@@ -14,6 +15,7 @@ def make_raw_datasets(
     to_format: str,
     weights: list[float],
     seed: int,
+    split_based_on_column: str = "",
 ) -> dict[str, dict[str, DataFrame]]:
     raw_path: Path = paths.get_path(paths.DATA_01RAW, source, as_string=False)
 
@@ -22,13 +24,29 @@ def make_raw_datasets(
 
     if isinstance(dataset_name, str):
         _make_raw_file(
-            session, source, dataset_name, from_format, to_format, weights, seed
+            session,
+            source,
+            dataset_name,
+            from_format,
+            to_format,
+            weights,
+            seed,
+            split_based_on_column,
         )
         return [dataset_name]
     else:
         dataset_names: list = []
         for dn in dataset_name:
-            _make_raw_file(session, source, dn, from_format, to_format, weights, seed)
+            _make_raw_file(
+                session,
+                source,
+                dn,
+                from_format,
+                to_format,
+                weights,
+                seed,
+                split_based_on_column,
+            )
             dataset_names += [dn]
         return dataset_names
 
@@ -48,7 +66,7 @@ def drop_columns(
     dataset = session.read.parquet(raw_datset_path)
     dataset = dataset.drop(*columns)
     processed_dataset_path = paths.get_path(
-        paths.DATA_03PROCESSED,
+        paths.DATA_02PROCESSED,
         source,
         dataset_type,
         dataset_name,
@@ -67,6 +85,7 @@ def _make_raw_file(
     to_format: str,
     weights: list[float],
     seed: int,
+    split_based_on_column: str,
 ):
     ext_filepath = paths.get_path(
         paths.DATA_01EXTERNAL,
@@ -80,7 +99,13 @@ def _make_raw_file(
         ext_filepath, format=catalog.FileFormat.CSV[1:], header=True, inferSchema=True
     )
 
-    train, prod = dataset.randomSplit(weights, seed=seed)
+    if split_based_on_column == "":
+        train, prod = dataset.randomSplit(weights, seed=seed)
+    else:
+        unique_items = dataset[[split_based_on_column]].distinct()
+        train_items, prod_items = unique_items.randomSplit(weights, seed=seed)
+        train = dataset.join(train_items, on=split_based_on_column)
+        prod = dataset.join(prod_items, on=split_based_on_column)
 
     raw_train_filepath = paths.get_path(
         paths.DATA_01RAW,
@@ -104,5 +129,4 @@ def _make_raw_file(
     )
 
     train.write.mode("overwrite").parquet(raw_train_filepath)
-    print("SENT TO MINIO!!!!")
     prod.write.mode("overwrite").parquet(raw_prod_filepath)

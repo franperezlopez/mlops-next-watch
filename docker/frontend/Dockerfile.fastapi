@@ -1,0 +1,16 @@
+FROM python:3.9
+
+#WORKDIR /app/src 
+
+#COPY ./src /app/src
+
+
+WORKDIR /app/src/frontend
+
+ENV PYTHONPATH="../:$PYTHONPATH"
+
+RUN pip3 install fastapi==0.100.0 uvicorn==0.23.1 python-dotenv sqlalchemy==2.0.19 psycopg2==2.9.6
+
+EXPOSE 8000
+
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

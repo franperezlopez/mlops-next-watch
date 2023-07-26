@@ -5,7 +5,7 @@ services:
   postgres:
     restart: always
     image: postgres
-    container_name: postgres-db
+    container_name: postgres
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     networks:
@@ -37,8 +37,12 @@ services:
       until psql -h postgres -U ${POSTGRES_USER} -c "SELECT 1" > /dev/null 2>&1; do
         sleep 1;
       done;
+
+      psql -h postgres -U ${POSTGRES_USER} -c "ALTER DATABASE template1 REFRESH COLLATION VERSION"; 
       psql -h postgres -U ${POSTGRES_USER} -c "CREATE DATABASE ${POSTGRES_MLFLOW_DATABASE}"; 
       psql -h postgres -U ${POSTGRES_USER} -c "CREATE DATABASE ${POSTGRES_AIRFLOW_DATABASE}"; 
+      psql -h postgres -U ${POSTGRES_USER} -c "CREATE DATABASE ${POSTGRES_APP_DATABASE}"; 
+      psql -h postgres -U ${POSTGRES_USER} -c "CREATE TABLE users (userId INTEGER PRIMARY KEY)"; 
       '
 
   minio:
@@ -185,7 +189,36 @@ services:
       - "4040-4080:4040-4080"
     volumes:
       - ./:/app:rw
+      - ./src:/usr/local/lib/python3.9/site-packages
+      - ./src:/usr/local/lib/python3.8/site-packages
 
+  fastapi:
+    build: 
+      context: ./
+      dockerfile:  ./docker/frontend/Dockerfile.fastapi
+    image: fastapi
+    container_name: fastapi
+    networks:
+      - nwnet
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app:r
+      - ./data:/app/data:rw
+
+  streamlit:
+    build: 
+      context: ./
+      dockerfile:  ./docker/frontend/Dockerfile.streamlit
+    image: streamlit
+    container_name: streamlit
+    networks:
+      - nwnet
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./:/app:r
+      - ./data:/app/data:rw
 volumes:
   mlflow-data:
     driver: local

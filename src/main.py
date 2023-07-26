@@ -5,10 +5,9 @@ import os
 import click
 import mlflow
 from dotenv import load_dotenv
-from pyspark.sql import SparkSession
 
 from collaborative.pipelines import pipelines
-from conf import catalog, globals, params, paths
+from conf import globals, paths
 
 
 @click.command()
@@ -42,25 +41,6 @@ def main(pipelines_to_run: str, experiment_name: str):
     logging.getLogger("pyspark").setLevel(logging.DEBUG)
     logger.info("Running Next-Watch")
 
-    # spark = (
-    #    SparkSession.builder.appName("Next Watch ML")
-    #    .master("local[3]")
-    #    # .config("spark.executor.memory", "3g")
-    #    # .config("spark.driver.maxResultSize", "96g")
-    #    # .config("spark.driver.memory", "96g")
-    #    # .config("spark.executor.memory", "8g")
-    #    # .config("packages", "org.apache.hadoop:hadoop-aws:3.3.4")
-    #    # .config(
-    #    #    "spark.hadoop.fs.s3a.aws.credentials.provider",
-    #    #    "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider",
-    #    # )
-    #    # .config(
-    #    #    "spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem"
-    #    # )  # mlflow doesn't support s3a
-    #    # .config("spark.hadoop.fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-    #    .config(map=params.Spark.py_config)
-    #    .getOrCreate()
-    # )
 
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     mlflow.set_experiment(experiment_name)

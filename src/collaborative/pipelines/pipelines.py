@@ -8,7 +8,7 @@ def data_engineering(
     source: str = catalog.Sources.MOVIELENS,
     from_format: str = catalog.FileFormat.CSV,
     to_format: str = catalog.FileFormat.PARQUET,
-    weights: list[float] = [params.RAW, 1 - params.RAW],
+    weights: list[float] = [1 - params.RAW, params.RAW],
     seed: int = params.SEED,
 ):
     session = (
@@ -23,14 +23,13 @@ def data_engineering(
         source,
         [
             catalog.Datasets.RATINGS,
-            catalog.Datasets.MOVIES,
             catalog.Datasets.TAGS,
-            catalog.Datasets.LINKS,
         ],
         from_format,
         to_format,
         weights,
         seed,
+        split_based_on_column="userId",
     )
 
     pre_processing_nodes.drop_columns(

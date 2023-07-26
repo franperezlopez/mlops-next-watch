@@ -10,7 +10,7 @@ A MLOps project for movie recommendations!
 - Python
 - Conda | Venv
 
-## Installation
+## Installation and Quick Start
 1. Clone the repo
 ```sh
 git clone https://github.com/brnaguiar/mlops-next-watch.git

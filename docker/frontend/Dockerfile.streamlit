@@ -1,0 +1,15 @@
+FROM python:3.9
+
+#WORKDIR /app/src
+#
+#COPY ./src /app/src
+
+EXPOSE 8501
+
+ENV PYTHONPATH="../:$PYTHONPATH"
+
+RUN pip3 install --no-cache-dir streamlit==1.25.0
+
+WORKDIR /app/src/frontend
+
+CMD ["streamlit", "run", "app.py", "--server.port", "8501"]

@@ -27,14 +27,17 @@ COPY ./requirements.minimal .
 RUN pip3 install --upgrade pip
 RUN pip3 install "Cython<3.0" "pyyaml<6" --no-build-isolation
 RUN python3.9 -m pip install -r requirements.minimal
+ENV PYTHONPATH="/usr/local/lib/python3.9/site-packages:$PYTHONPATH"
+#ENV PYTHONPATH="/usr/local/lib/python3.8/site-packages:$PYTHONPATH"
 WORKDIR /app
-
 # Generate a default Jupyter config file
 RUN jupyter notebook --generate-config
 
 # Set the default Jupyter config options
 RUN echo "c.NotebookApp.token = ''" >> /root/.jupyter/jupyter_notebook_config.py
 RUN echo "c.NotebookApp.password = ''" >> /root/.jupyter/jupyter_notebook_config.py
+RUN echo "c.Spawner.env_keep.append('PYTHONPATH')" >> /root/.jupyter/jupyter_notebook_config.py
+
 
 
 EXPOSE 8888

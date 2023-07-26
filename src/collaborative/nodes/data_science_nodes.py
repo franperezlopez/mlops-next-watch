@@ -98,7 +98,7 @@ def split_train_test(session: SparkSession, source: str):
     """Splits the training data into train and test sets"""
     dataset = session.read.parquet(
         paths.get_path(
-            paths.DATA_03PROCESSED,
+            paths.DATA_02PROCESSED,
             source,
             catalog.DatasetType.TRAIN,
             catalog.Datasets.RATINGS,
@@ -110,7 +110,7 @@ def split_train_test(session: SparkSession, source: str):
     train, test = dataset.randomSplit([params.TRAIN, 1 - params.TRAIN], seed=42)
     train.write.mode("overwrite").parquet(
         paths.get_path(
-            paths.DATA_04TRAIN,
+            paths.DATA_03TRAIN,
             source,
             catalog.DatasetType.TRAIN,
             catalog.Datasets.RATINGS,
@@ -121,7 +121,7 @@ def split_train_test(session: SparkSession, source: str):
     )
     test.write.mode("overwrite").parquet(
         paths.get_path(
-            paths.DATA_04TRAIN,
+            paths.DATA_03TRAIN,
             source,
             catalog.DatasetType.TEST,
             catalog.Datasets.RATINGS,
@@ -139,7 +139,9 @@ def hyperparam_opt_als(session: SparkSession, source: str):
         train (DataFrame): A `Spark` `DataFrame` containing the training set
 
     """
-    trials = Trials()  # TODO: use `SparkTrials`` distribute trials to the workers
+    trials = (
+        Trials()
+    )  # FROM `hyperopt` docs: Do not use the SparkTrials class with MLlib. SparkTrials is designed to distribute trials for algorithms that are not themselves distributed.
 
     rank = params.ALS.RANK
     reg_param = params.ALS.REG_INTERVAL
@@ -155,7 +157,7 @@ def hyperparam_opt_als(session: SparkSession, source: str):
 
     train = session.read.parquet(
         paths.get_path(
-            catalog.paths.DATA_04TRAIN,
+            catalog.paths.DATA_03TRAIN,
             source,
             catalog.DatasetType.TRAIN,
             catalog.Datasets.RATINGS,
@@ -166,7 +168,7 @@ def hyperparam_opt_als(session: SparkSession, source: str):
     )
     val = session.read.parquet(
         paths.get_path(
-            catalog.paths.DATA_04TRAIN,
+            catalog.paths.DATA_03TRAIN,
             source,
             catalog.DatasetType.TEST,
             catalog.Datasets.RATINGS,

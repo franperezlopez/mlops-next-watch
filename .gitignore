@@ -110,12 +110,12 @@ references/
 reports/
 models/
 
-requirements.dist
 assets/*
 
 # Keep data directories structure
 #!data/**/
 #!data/**/.gitkeep
 !**/.gitkeep
+requirements.dist
 
 
