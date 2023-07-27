@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Union
 
@@ -107,6 +108,16 @@ def _make_raw_file(
         train = dataset.join(train_items, on=split_based_on_column)
         prod = dataset.join(prod_items, on=split_based_on_column)
 
+    remote_ext_filepath = paths.get_path(
+        paths.DATA_01EXTERNAL,
+        source,
+        dataset_name,
+        suffix=from_format,
+        storage=globals.Storage.S3,
+        as_string=True,
+        s3_protocol=globals.Protocols.S3,
+    )
+
     raw_train_filepath = paths.get_path(
         paths.DATA_01RAW,
         source,
@@ -116,7 +127,6 @@ def _make_raw_file(
         storage=globals.Storage.S3,
         as_string=True,
     )
-    print(raw_train_filepath)
 
     raw_prod_filepath = paths.get_path(
         paths.DATA_01RAW,
@@ -128,5 +138,19 @@ def _make_raw_file(
         as_string=True,
     )
 
+    print("\n\n\n\n AWS ACCESS KEY:::")
+    print(remote_ext_filepath)  # os.getenv()
+
+    dataset.toPandas().to_csv(
+        remote_ext_filepath,
+        index=False,
+        storage_options={
+            "key": os.getenv("AWS_ACCESS_KEY_ID"),
+            "secret": os.getenv("AWS_SECRET_ACCESS_KEY"),
+        },
+    )
+    # .coalesce(1).write.option("header", True).mode("overwrite").csv(
+    #    remote_ext_filepath
+    # )
     train.write.mode("overwrite").parquet(raw_train_filepath)
     prod.write.mode("overwrite").parquet(raw_prod_filepath)

@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 import streamlit as st
+from streamlit.runtime.state import session_state
 
 from conf import catalog, globals, paths
 
@@ -8,7 +9,6 @@ st.set_page_config(
     page_title="Next Watch",
     page_icon="🍿",  # 👋👋👋👋👋
 )
-
 
 user_limit = 1000000
 
@@ -38,24 +38,17 @@ def register_user(users_list):
         st.markdown("#### User already exists!!!")
 
 
-def save_rating(ratings_df, movie_row, ratings_df_path):
-    matching_rows = ratings_df[
-        (ratings_df["movieId"] == movie_row["movieId"].item())
-        & (ratings_df["userId"] == st.session_state.user_id)
-    ]
-    new_row = {
-        "userId": st.session_state.user_id,
-        "movieId": movie_row["movieId"].item(),
-        "rating": st.session_state.ratings,
-        "timestamp": 122334,
-    }
-    # If there is a match, replace the existing row with the new values
-    ratings_df.loc[
-        matching_rows.index[0] if not matching_rows.empty else len(ratings_df)
-    ] = new_row
-
-    # Save new ratings...
-    ratings_df.to_csv(ratings_df_path, index=False) ### Important !!!
+def save_rating(selected_movie):
+    ## Save new ratings...
+    response = requests.post(
+        "http://fastapi:8000/add_rating/",
+        params={
+            "rating": st.session_state.ratings,
+            "selected_movie": selected_movie,
+            "user_id": st.session_state.user_id,
+        },
+    )
+    print(response)
 
 
 if st.session_state.user_id == -1:
@@ -96,17 +89,6 @@ else:
     st.markdown(f"# Welcome back user {st.session_state.user_id}")
 
     st.markdown("### Rate a movie:")
-    movies_df = pd.read_csv(
-        paths.get_path(
-            paths.DATA_01EXTERNAL,
-            catalog.Sources.MOVIELENS,
-            catalog.Datasets.MOVIES,
-            suffix=catalog.FileFormat.CSV,
-            storage=globals.Storage.DOCKER,
-            as_string=True,
-        )
-    )
-    #    "/home/bruno/mlops-project/next-watch/data/01-external/movielens/movies.csv"
     ratings_df_path = paths.get_path(
         paths.DATA_01EXTERNAL,
         catalog.Sources.MOVIELENS,
@@ -115,14 +97,9 @@ else:
         storage=globals.Storage.DOCKER,
         as_string=True,
     )
-    ratings_df = (
-        pd.read_csv(ratings_df_path)
-    )  # "/home/bruno/mlops-project/next-watch/data/01-external/movielens/ratings.csv")))
-    movies_list = movies_df["title"].unique().tolist()
+    ratings_df = pd.read_csv(ratings_df_path)
+    movies_list = requests.get("http://fastapi:8000/movies_list/").json()
     selected_movie = st.selectbox("Select an existing user id:", movies_list)
-    print(selected_movie)
-    movie_row = movies_df[movies_df["title"] == selected_movie]
-    print(movie_row)
     stars = st.slider(
         "",
         min_value=0.0,
@@ -130,22 +107,7 @@ else:
         step=0.5,
         key="ratings",
         on_change=save_rating,
-        args=(ratings_df, movie_row, ratings_df_path),
-    )  # size=20,  size=20,  size=20,
-    # print(stars)
-    ##user_rating_info = {
-    ##    "userId": st.session_state.user_id,
-    ##    "movieId": movie_row["movieId"],
-    ##    "rating": float(stars),
-    ##    "timestamp": 1223,
-    ##}
-    # ratings_df.append()
+        args=(selected_movie,),
+    )
 
     st.session_state.user_id = st.session_state.user_id
-
-# with col2:
-
-# if session_user_id < user_limit:
-#    print(session_user_id)
-#    st.markdown(f"# Recommending as user {session_user_id}")
-#

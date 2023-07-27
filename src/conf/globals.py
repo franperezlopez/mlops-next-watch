@@ -43,3 +43,8 @@ class Storage:
     HOST = "host"
     DOCKER = "docker"
     S3 = "s3"
+
+
+class Protocols:
+    S3 = "s3"
+    S3A = "s3a"

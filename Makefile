@@ -44,6 +44,7 @@ init:
 	docker compose up postgres create-databases
 	cd src
 	python3.9 populate_db_with_users.py
+	python3.9 create_aws_credentials_file.py
 	cd ..
 	#docker compose up airflow-init
 	#docker compose down --volumes --remove-orphans 

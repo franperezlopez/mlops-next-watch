@@ -23,7 +23,8 @@ def get_path(
     *args,
     suffix: str = "",
     as_string: bool = False,
-    storage: str = globals.Storage.DOCKER
+    storage: str = globals.Storage.DOCKER,
+    s3_protocol: str = globals.Protocols.S3A,
 ) -> Union[Path, str]:  # |
     """
     params:
@@ -45,7 +46,7 @@ def get_path(
 
     # print(path.as_uri())
     return (
-        ("s3a://" + str(path) if storage == globals.Storage.S3 else str(path))
+        (f"{s3_protocol}://" + str(path) if storage == globals.Storage.S3 else str(path))
         if as_string
         else path
     )

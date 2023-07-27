@@ -1,13 +1,14 @@
 import os
 from typing import List
 
+import pandas as pd
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from sqlalchemy import Column, Integer, MetaData, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
-from conf import globals, paths
+from conf import catalog, globals, paths
 
 app = FastAPI()
 
@@ -62,3 +63,73 @@ def add_user(user_id: int, db: Session = Depends(get_db)):
     db.refresh(db_user)
     print("yo")
     return db_user
+
+
+movies_df = pd.read_csv(
+    paths.get_path(
+        paths.DATA_01EXTERNAL,
+        catalog.Sources.MOVIELENS,
+        catalog.Datasets.MOVIES,
+        suffix=catalog.FileFormat.CSV,
+        storage=globals.Storage.DOCKER,
+        as_string=True,
+    )
+)
+
+
+@app.get("/movies_list/", response_model=List[str])
+def get_movies_list():
+    return movies_df["title"].unique().tolist()
+
+
+@app.post("/add_rating/", response_model=str)
+def add_rating(rating: float, selected_movie: str, user_id: int):
+    ratings_df_path = paths.get_path(
+        paths.DATA_01EXTERNAL,
+        catalog.Sources.MOVIELENS,
+        catalog.Datasets.RATINGS,
+        suffix=catalog.FileFormat.CSV,
+        storage=globals.Storage.DOCKER,
+        as_string=True,
+    )
+    ratings_df = pd.read_csv(ratings_df_path)  # eeeeee
+
+    movie_row = movies_df[movies_df["title"] == selected_movie]
+
+    matching_rows = ratings_df[
+        (ratings_df["movieId"] == movie_row["movieId"].item())
+        & (ratings_df["userId"] == user_id)
+    ]
+
+    new_row = {
+        "userId": user_id,
+        "movieId": movie_row["movieId"].item(),
+        "rating": rating,
+        "timestamp": 122334,
+    }
+
+    # If there is a match, replace the existing row with the new values
+    ratings_df.loc[
+        matching_rows.index[0] if not matching_rows.empty else len(ratings_df)
+    ] = new_row
+
+    remote_ratingspath = paths.get_path(
+        paths.DATA_01EXTERNAL,
+        catalog.Sources.MOVIELENS,
+        catalog.Datasets.RATINGS,
+        suffix=catalog.FileFormat.CSV,
+        storage=globals.Storage.S3,
+        as_string=True,
+        s3_protocol=globals.Protocols.S3,
+    )
+    # Save new ratings...
+    ratings_df.to_csv(
+        remote_ratingspath,
+        index=False,
+        storage_options={
+            "key": os.getenv("AWS_ACCESS_KEY_ID"),
+            "secret": os.getenv("AWS_SECRET_ACCESS_KEY"),
+        },
+    )  ### Important !!!
+
+    return "Rating saved!!!"
