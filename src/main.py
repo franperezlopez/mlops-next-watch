@@ -18,6 +18,7 @@ from conf import globals, paths
     default=[globals.Pipelines.DATA_SCIENCE],
     type=str,
     multiple=True,
+    required=True,
     help="Set Pipelines to run",
 )
 @click.option(
@@ -29,7 +30,25 @@ from conf import globals, paths
     nargs=1,
     help="Set Experiment name",
 )
-def main(pipelines_to_run: str, experiment_name: str):
+@click.option(
+    "-u",
+    "--userid",
+    "user_id",
+    default=451,
+    type=int,
+    nargs=1,
+    help="Set User ID for inference.",
+)
+@click.option(
+    "-n",
+    "--nrecommendations",
+    "n_recommendations",
+    default=5,
+    type=int,
+    nargs=1,
+    help="Set a number of movie recommendations.",
+)
+def main(pipelines_to_run: str, experiment_name: str, user_id: int, n_recommendations: int):
     """Main Program
 
     Args:
@@ -54,6 +73,8 @@ def main(pipelines_to_run: str, experiment_name: str):
             pipelines.data_engineering()
         if p == globals.Pipelines.DATA_SCIENCE:
             pipelines.data_science()
+        if p == globals.Pipelines.INFERENCE:
+            pipelines.inference(user_id, n_recommendations)
 
 
 if __name__ == "__main__":

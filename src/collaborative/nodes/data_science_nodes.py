@@ -49,6 +49,7 @@ def _train_als(train, val):
             mlflow.spark.log_model(
                 model,
                 globals.MLflow.ALS_MODEL_ARTIFACT_PATH,
+                dfs_tmpdir="/sparktmp"
             )
 
             return {"loss": metric, "params": params, "status": STATUS_OK}
@@ -89,7 +90,7 @@ def _register_best_model(client: mlflow.tracking.MlflowClient, run_id: str):
     client.transition_model_version_stage(
         name=globals.MLflow.ALS_REGISTERED_MODEL_NAME,
         version=model_version.version,
-        stage="Staging",
+        stage="Production",
         archive_existing_versions=True,
     )
 

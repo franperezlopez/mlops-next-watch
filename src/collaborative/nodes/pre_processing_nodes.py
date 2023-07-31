@@ -137,17 +137,43 @@ def _make_raw_file(
         storage=globals.Storage.S3,
         as_string=True,
     )
+    raw_train_filepath_CSV = paths.get_path(
+        paths.DATA_01RAW,
+        source,
+        catalog.DatasetType.TRAIN,
+        dataset_name,
+        suffix=catalog.FileFormat.CSV,
+        storage=globals.Storage.S3,
+        as_string=True,
+    )
 
-    print("\n\n\n\n AWS ACCESS KEY:::")
-    print(remote_ext_filepath)  # os.getenv()
-
+    raw_prod_filepath_CSV = paths.get_path(
+        paths.DATA_01RAW,
+        source,
+        catalog.DatasetType.PRODUCTION,
+        dataset_name,
+        suffix=catalog.FileFormat.CSV,
+        storage=globals.Storage.S3,
+        as_string=True,
+    )
+    storage_options = {
+        "key": os.getenv("AWS_ACCESS_KEY_ID"),
+        "secret": os.getenv("AWS_SECRET_ACCESS_KEY"),
+    }
     dataset.toPandas().to_csv(
         remote_ext_filepath,
         index=False,
-        storage_options={
-            "key": os.getenv("AWS_ACCESS_KEY_ID"),
-            "secret": os.getenv("AWS_SECRET_ACCESS_KEY"),
-        },
+        storage_options=storage_options,
+    )
+    train.toPandas().to_csv(
+        raw_train_filepath_CSV,
+        index=False,
+        storage_options=storage_options,
+    )
+    prod.toPandas().to_csv(
+        raw_prod_filepath_CSV,
+        index=False,
+        storage_options=storage_options,
     )
     # .coalesce(1).write.option("header", True).mode("overwrite").csv(
     #    remote_ext_filepath

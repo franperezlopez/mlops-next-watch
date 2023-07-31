@@ -27,6 +27,7 @@ class Pipelines:
     DATA_ENGINEERING = "de"
     DS = "ds"
     DE = "de"
+    INFERENCE = "inference"
 
 
 class Logs:

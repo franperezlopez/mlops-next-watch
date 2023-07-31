@@ -77,7 +77,8 @@ target/
 
 # Exclude data from source control by default
 # data/*
-data/**/*.csv
+data/**/* 
+#data/**/*.txt#.csv
 
 # Mac OS-specific storage files
 .DS_Store
@@ -91,9 +92,8 @@ data/**/*.csv
 
 # Docker folder
 docker/**/*-data/
-
-# Hadoop jar
 docker/mlflow/*.jar
+docker/sparktmp/*
 
 # Ignore "old/" folders
 old/
