@@ -43,7 +43,7 @@ init:
 	docker compose build --no-cache
 	docker compose up postgres create-databases
 	cd src
-	python3.9 create_aws_credentials_file.py
+	python3.9 scripts/create_aws_credentials_file.py
 	cd ..
 	#docker compose up airflow-init
 	#docker compose down --volumes --remove-orphans 
@@ -54,7 +54,7 @@ run-de:
 
 ## Populate Databse with Users from production datasets
 pop-db-users:
-	docker compose exec dev-spark bash -c "cd src; python3.9 populate_db_with_users.py"
+	docker compose exec dev-spark bash -c "cd src; python3.9 scripts/populate_db_with_users.py"
 
 ## Run DS pipelines
 run-ds:

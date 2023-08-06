@@ -1,3 +1,6 @@
+import os
+
+import kafka
 from pyspark.sql import SparkSession
 
 from collaborative.nodes import (
@@ -6,6 +9,7 @@ from collaborative.nodes import (
     pre_processing_nodes,
 )
 from conf import catalog, globals, params
+from utils.psycopg_handler import PsycopgHandler
 
 
 def data_engineering(
@@ -65,7 +69,7 @@ def data_science(source: str = catalog.Sources.MOVIELENS):
 
 
 def inference(
-    user_id: int,
+    user_ids: list[int],
     n_recommendations: int,
     source: str = catalog.Sources.MOVIELENS,
     model_name: str = globals.MLflow.ALS_REGISTERED_MODEL_NAME,
@@ -77,11 +81,35 @@ def inference(
         .getOrCreate()
     )
     session.sparkContext.setLogLevel("INFO")
-    inference_data = inference_nodes.create_inference_data(session, source, user_id)
-    model = inference_nodes.fetch_latest_model(model_name=model_name, stage=model_stage)
-    recommendations = inference_nodes.recommend_movies(
-        model, inference_data, n_recommendations
+
+    producer = kafka.KafkaProducer(
+        bootstrap_servers=f"{os.environ['KAFKA_IP']}:{os.environ['KAFKA_PORT']}",
+        api_version=(3, 5, 1),
     )
-    print("yo: ", recommendations)
-    return recommendations
-    # inference
+
+    psycopg = PsycopgHandler(
+        os.getenv("POSTGRES_USER"),
+        os.getenv("POSTGRES_PASSWORD"),
+        os.getenv("POSTGRES_IP"),
+        os.getenv("POSTGRES_PORT"),
+        os.getenv("POSTGRES_APP_DATABASE"),
+    )
+    if user_ids == []:
+        user_ids = [
+            utuple[0]
+            for utuple in psycopg.read_db(
+                f"SELECT * FROM {os.getenv('POSTGRES_USERS_TABLE')}"
+            )
+        ]
+
+    inference_data = inference_nodes.create_inference_data_for_users(
+        session, source, user_ids
+    )
+    model = inference_nodes.fetch_latest_model(model_name=model_name, stage=model_stage)
+    inference_nodes.recommend_movies(
+        model,
+        producer,
+        os.getenv("KAFKA_RECOMMENDATIONS_TOPIC"),
+        inference_data,
+        n_recommendations,
+    )

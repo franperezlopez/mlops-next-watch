@@ -1,12 +1,20 @@
 import os
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
-from sqlalchemy import Column, Integer, MetaData, create_engine
+from sqlalchemy import (
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    UniqueConstraint,
+    create_engine,
+    text,
+)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, column_property, sessionmaker
 
 from conf import catalog, globals, paths
 
@@ -40,29 +48,23 @@ Base = declarative_base()
 
 # Dependency
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = os.getenv("POSTGRES_USERS_TABLE")
     userId = Column(Integer, primary_key=True, index=True)
 
 
+class Recommendations(Base):
+    __tablename__ = os.getenv("POSTGRES_RECOMMENDATIONS_TABLE")
+    id = Column(Integer, index=True, primary_key=True)
+    userid =  Column(Integer)
+    movieid = Column(Integer)
+    prediction = Column(Float)
+    rank = Column(Integer)
+    __table_args__ = (
+        UniqueConstraint('userid', 'rank', name='unique_user_rank'),
+    )
+
+
 metadata = MetaData()
-
-
-@app.get("/user_ids/", response_model=List[int])
-def get_user_ids(db: Session = Depends(get_db)):
-    print("yo")
-    users_list = [user_id for user_id, in db.query(User.userId).all()]
-    print(users_list)
-    return users_list
-
-
-@app.post("/add_user/", response_model=None)
-def add_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = User(userId=user_id)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    print("yo")
-    return db_user
 
 
 movies_df = pd.read_csv(
@@ -75,6 +77,40 @@ movies_df = pd.read_csv(
         as_string=True,
     )
 )
+
+
+@app.get("/user_ids/", response_model=List[int])
+def get_user_ids(db: Session = Depends(get_db)):
+    users_list = [user_id for user_id, in db.query(User.userId).all()]
+    print(users_list)
+    return users_list
+
+
+@app.get("/recommendations/", response_model=List[Tuple])
+def get_recommendations(user_id: int, db: Session = Depends(get_db)):
+    recommendations = db.query(Recommendations).filter(Recommendations.userid == user_id)
+    a = [
+        (
+            r.id,
+            r.userid,
+            r.movieid,
+            movies_df[movies_df["movieId"] == r.movieid]["title"].item(),
+            r.prediction,
+            r.rank
+        )
+        for r in recommendations
+    ]
+    print("\n\n ********fastapi***********: ", a)
+    return a
+
+
+@app.post("/add_user/", response_model=None)
+def add_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = User(userId=user_id)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 
 @app.get("/movies_list/", response_model=List[str])

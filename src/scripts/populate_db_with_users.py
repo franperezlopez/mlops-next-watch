@@ -12,29 +12,6 @@ load_dotenv(
     )
 )
 
-# session = (
-#    SparkSession.builder.appName("Populate DB with existing users")
-#    .config(
-#        "spark.jars",
-#        paths.get_path(
-#            paths.ASSETS,
-#            "postgresql-42.6.0.jar",
-#            as_string=True,
-#            storage=globals.Storage.HOST,
-#        ),
-#    )
-#    .config(
-#        "spark.driver.extraClassPath",
-#        paths.get_path(
-#            paths.ASSETS,
-#            "postgresql-42.6.0.jar",
-#            as_string=True,
-#            storage=globals.Storage.HOST,
-#        ),
-#    )
-#    .getOrCreate()
-# )
-
 session = (
     SparkSession.builder.appName("populate-users")
     .config(map=params.Spark.spark_config)
@@ -53,7 +30,14 @@ ext_filepath = paths.get_path(
     paths.DATA_01EXTERNAL,
     catalog.Sources.MOVIELENS,
     catalog.Datasets.RATINGS,
-    suffix=catalog.FileFormat.CSV,
+    suffix=catalog.FileFormat.CSVCREATE TABLE accounts (
+	user_id serial PRIMARY KEY,
+	username VARCHAR ( 50 ) UNIQUE NOT NULL,
+	password VARCHAR ( 50 ) NOT NULL,
+	email VARCHAR ( 255 ) UNIQUE NOT NULL,
+	created_on TIMESTAMP NOT NULL,
+        last_login TIMESTAMP 
+);,
     as_string=True,
 )
 remote_ext_filepath = paths.get_path(

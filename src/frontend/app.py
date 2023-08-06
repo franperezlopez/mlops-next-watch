@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import streamlit as st
 from streamlit.runtime.state import session_state
+from typing import List, Tuple
 
 from conf import catalog, globals, paths
 
@@ -48,7 +49,15 @@ def save_rating(selected_movie):
             "user_id": st.session_state.user_id,
         },
     )
-    print(response)
+
+def get_recommendations() -> List[Tuple]:
+    response = requests.get(
+        "http://fastapi:8000/recommendations/",
+        params={
+            "user_id": st.session_state.user_id
+        },
+    )
+    return response.json()
 
 
 if st.session_state.user_id == -1:
@@ -63,7 +72,7 @@ if st.session_state.user_id == -1:
     register_button = st.button("Register new user id")
 
     if existing_button:
-        st.markdown("### Select existing user id:")
+        #  st.markdown("### Select existing user id:")
         st.selectbox(
             "",
             users_list,
@@ -88,6 +97,7 @@ if st.session_state.user_id == -1:
 else:
     st.markdown(f"# Welcome back user {st.session_state.user_id}")
 
+
     st.markdown("### Rate a movie:")
     ratings_df_path = paths.get_path(
         paths.DATA_01EXTERNAL,
@@ -109,5 +119,11 @@ else:
         on_change=save_rating,
         args=(selected_movie,),
     )
+
+    recommendations = get_recommendations()
+
+    recommendations_df = pd.DataFrame(recommendations, columns=["id", "userid", "movieid", "title", "Score Likelihood", "rank"])
+    st.markdown("### Movie recommendations for you:")
+    st.table(recommendations_df[["rank", "title", "Score Likelihood"]])
 
     st.session_state.user_id = st.session_state.user_id

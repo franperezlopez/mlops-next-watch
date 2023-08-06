@@ -32,10 +32,11 @@ from conf import globals, paths
 )
 @click.option(
     "-u",
-    "--userid",
-    "user_id",
-    default=451,
+    "--userids",
+    "user_ids",
+    default=[],#451, 597
     type=int,
+    multiple=True,
     nargs=1,
     help="Set User ID for inference.",
 )
@@ -48,7 +49,7 @@ from conf import globals, paths
     nargs=1,
     help="Set a number of movie recommendations.",
 )
-def main(pipelines_to_run: str, experiment_name: str, user_id: int, n_recommendations: int):
+def main(pipelines_to_run: str, experiment_name: str, user_ids: list[int], n_recommendations: int):
     """Main Program
 
     Args:
@@ -66,7 +67,7 @@ def main(pipelines_to_run: str, experiment_name: str, user_id: int, n_recommenda
 
     mlflow.spark.autolog(disable=True)
 
-    print(pipelines_to_run)
+    print(list(user_ids))
     for p in pipelines_to_run:
         print(p)
         if p == globals.Pipelines.DATA_ENGINEERING:
@@ -74,7 +75,7 @@ def main(pipelines_to_run: str, experiment_name: str, user_id: int, n_recommenda
         if p == globals.Pipelines.DATA_SCIENCE:
             pipelines.data_science()
         if p == globals.Pipelines.INFERENCE:
-            pipelines.inference(user_id, n_recommendations)
+            pipelines.inference(list(user_ids), n_recommendations)
 
 
 if __name__ == "__main__":

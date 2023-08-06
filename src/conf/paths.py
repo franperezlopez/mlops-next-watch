@@ -25,7 +25,7 @@ def get_path(
     as_string: bool = False,
     storage: str = globals.Storage.DOCKER,
     s3_protocol: str = globals.Protocols.S3A,
-) -> Union[Path, str]:  # |
+) -> Union[Path, str]:
     """
     params:
         *args: can be of a Paths obj, a Source obj, a name of a dir as a string, a filename, etc.
@@ -34,7 +34,7 @@ def get_path(
     path = Path()
     if storage == globals.Storage.DOCKER:
         path = Path("/app")
-    if storage == globals.Storage.S3:
+    elif storage == globals.Storage.S3:
         path = Path()
     else:
         path = Path(__file__).parent.parent.parent.absolute()
@@ -44,10 +44,8 @@ def get_path(
     if suffix != "":
         path = path.with_suffix(suffix)
 
-    # print(path.as_uri())
     return (
         (f"{s3_protocol}://" + str(path) if storage == globals.Storage.S3 else str(path))
         if as_string
         else path
     )
-    # return (path.as_uri() if isinstance(path, S3Path) else str(path)) if as_string else path
