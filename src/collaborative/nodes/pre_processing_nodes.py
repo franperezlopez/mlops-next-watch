@@ -175,8 +175,5 @@ def _make_raw_file(
         index=False,
         storage_options=storage_options,
     )
-    # .coalesce(1).write.option("header", True).mode("overwrite").csv(
-    #    remote_ext_filepath
-    # )
     train.write.mode("overwrite").parquet(raw_train_filepath)
     prod.write.mode("overwrite").parquet(raw_prod_filepath)

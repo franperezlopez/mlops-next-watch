@@ -6,93 +6,41 @@ from pyspark.ml.recommendation import ALS
 from pyspark.sql import DataFrame, SparkSession
 
 from conf import catalog, globals, params, paths
+from utils.experiment_tracking import MLflowHandler
 
 
 def _train_als(train, val):
     """Where the train is taken..."""
 
+    @MLflowHandler.log_train
     def train_wrapper(params):
-        with mlflow.start_run(nested=True):
-            mlflow.set_tags(
-                {
-                    "model": globals.MLflow.ALS_MODEL_NAME,
-                    "mlflow.runName": f"als_rank_{params['rank']}_reg_{params['reg_param']:4f}",
-                }
-            )
-            mlflow.log_params(params)
+        als = ALS(
+            userCol="userId",
+            itemCol="movieId",
+            ratingCol="rating",
+            rank=params["rank"],
+            regParam=params["reg_param"],
+            coldStartStrategy=params["cold_start_strategy"],
+            maxIter=params["max_iter"],
+        )
 
-            als = ALS(
-                userCol="userId",
-                itemCol="movieId",
-                ratingCol="rating",
-                rank=params["rank"],
-                regParam=params["reg_param"],
-                coldStartStrategy=params["cold_start_strategy"],
-                maxIter=params["max_iter"],
-            )
+        evaluator = RegressionEvaluator(
+            metricName=globals.MLflow.ALS_METRIC,
+            labelCol="rating",
+            predictionCol="prediction",
+        )
 
-            evaluator = RegressionEvaluator(
-                metricName=globals.MLflow.ALS_METRIC,
-                labelCol="rating",
-                predictionCol="prediction",
-            )
+        als_model = Pipeline(stages=[als])
 
-            als_model = Pipeline(stages=[als])
+        model = als_model.fit(train)
 
-            model = als_model.fit(train)
+        predictions = model.transform(val)
 
-            predictions = model.transform(val)
+        metric = evaluator.evaluate(predictions)
 
-            metric = evaluator.evaluate(predictions)
-
-            mlflow.log_metric(globals.MLflow.ALS_METRIC, metric)
-            mlflow.spark.log_model(
-                model,
-                globals.MLflow.ALS_MODEL_ARTIFACT_PATH,
-                dfs_tmpdir="/sparktmp"
-            )
-
-            return {"loss": metric, "params": params, "status": STATUS_OK}
+        return metric, model
 
     return train_wrapper
-
-
-def _log_best_trial(
-    run: mlflow.entities.Run, trials: Trials
-) -> tuple[mlflow.tracking.MlflowClient, str, dict]:
-    """Log the best trial
-    Args:
-        run (mlflow.entities.Run): An MLflow Run Object
-        trials (Trials): all trials from hyperopt
-    """
-    client = mlflow.tracking.MlflowClient()
-    best_trial_params = sorted(trials.results, key=lambda result: result["loss"])[0]
-
-    runs = client.search_runs(
-        [run.info.experiment_id], f"tags.mlflow.parentRunId = '{run.info.run_id}'"
-    )
-    best_run = min(runs, key=lambda run: run.data.metrics[globals.MLflow.ALS_METRIC])
-    best_run_id = best_run.info.run_id
-    mlflow.set_tag("best_run", best_run_id)
-    mlflow.log_metric("best_metric", best_run.data.metrics[globals.MLflow.ALS_METRIC])
-    mlflow.log_dict(
-        best_trial_params, "best_params.json"
-    )  # TODO: Change to log_params...
-
-    return client, best_run_id, best_trial_params
-
-
-def _register_best_model(client: mlflow.tracking.MlflowClient, run_id: str):
-    model_version = mlflow.register_model(
-        f"runs:/{run_id}/{globals.MLflow.ALS_MODEL_ARTIFACT_PATH}",
-        globals.MLflow.ALS_REGISTERED_MODEL_NAME,
-    )
-    client.transition_model_version_stage(
-        name=globals.MLflow.ALS_REGISTERED_MODEL_NAME,
-        version=model_version.version,
-        stage="Production",
-        archive_existing_versions=True,
-    )
 
 
 def split_train_test(session: SparkSession, source: str):
@@ -140,9 +88,6 @@ def hyperparam_opt_als(session: SparkSession, source: str):
         train (DataFrame): A `Spark` `DataFrame` containing the training set
 
     """
-    trials = (
-        Trials()
-    )  # FROM `hyperopt` docs: Do not use the SparkTrials class with MLlib. SparkTrials is designed to distribute trials for algorithms that are not themselves distributed.
 
     rank = params.ALS.RANK
     reg_param = params.ALS.REG_INTERVAL
@@ -178,18 +123,23 @@ def hyperparam_opt_als(session: SparkSession, source: str):
             as_string=True,
         )
     )
+
+    trials = (
+        Trials()
+    )  # FROM `hyperopt` docs: Do not use the SparkTrials class with MLlib. SparkTrials is designed to distribute trials for algorithms that are not themselves distributed.
+
+    _run_hyperparam_opt(train, val, space_search, trials)
+
+
+@MLflowHandler.log_hyperparam_opt
+def _run_hyperparam_opt(train, val, space_search, trials):
     # Start Hyper-Parameter Optimization
-    with mlflow.start_run(run_name=globals.MLflow.ALS_RUN_NAME) as run:
-        best = fmin(
-            fn=_train_als(train=train, val=val),
-            space=space_search,
-            algo=tpe.suggest,
-            max_evals=5,
-            trials=trials,
-        )
+    best = fmin(
+        fn=_train_als(train=train, val=val),
+        space=space_search,
+        algo=tpe.suggest,
+        max_evals=5,
+        trials=trials,
+    )
 
-        # Log best trail/run
-        client, best_run_id, best_trial_params = _log_best_trial(run, trials)
-
-        # Register best model in Mlflow Model Registry
-        _register_best_model(client, best_run_id)
+    return best
