@@ -75,7 +75,7 @@ def main(pipelines_to_run: str, experiment_name: str, user_ids: list[int], n_rec
         if p == globals.Pipelines.DATA_SCIENCE:
             pipelines.data_science()
         if p == globals.Pipelines.INFERENCE:
-            pipelines.inference(list(user_ids), n_recommendations)
+            pipelines.batch_inference(list(user_ids), n_recommendations)
 
 
 if __name__ == "__main__":
@@ -101,3 +101,4 @@ if __name__ == "__main__":
 
     # run `main`
     main()
+    

@@ -35,7 +35,7 @@ requirements: test_environment
 	#cp ./assets/hadoop-common-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
 
 ## Generate requirements for distributable packages.jar
-gen_dist_requirements:
+environment:
 	pip list --format=freeze > requirements.dist
 
 ## Config databases, init programs, etc...
@@ -58,7 +58,7 @@ pop-db-users:
 
 ## Run DS pipelines
 run-ds:
-	docker compose exec dev-spark bash -c "cd src; python3.9 main.py -p 'de'"
+	docker compose exec dev-spark bash -c "cd src; python3.9 main.py -p 'ds'"
 
 ## Delete all compiled Python files
 clean:

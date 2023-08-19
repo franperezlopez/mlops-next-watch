@@ -109,7 +109,7 @@ else:
     )
     ratings_df = pd.read_csv(ratings_df_path)
     movies_list = requests.get("http://fastapi:8000/movies_list/").json()
-    selected_movie = st.selectbox("Select an existing user id:", movies_list)
+    selected_movie = st.selectbox("", movies_list)#Select an existing user id:
     stars = st.slider(
         "",
         min_value=0.0,

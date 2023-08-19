@@ -1,4 +1,4 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractclassmethod, abstractmethod
 
 import mlflow
 from hyperopt import STATUS_OK, Trials
@@ -8,12 +8,20 @@ from conf import globals
 
 class ExperimentTracking(ABC):
     @abstractclassmethod
-    def log_train(self, func):
+    def log_train(cls, func):
         """
         Define a way to log the training...
         """
 
         def wrapper(params):
+            pass
+
+    @abstractclassmethod
+    def log_hyperparam_opt(cls, func):
+        """
+        Define a way to log the hyper-parameter optimization....
+        """
+        def wrapper(train, val, space_search, trials):
             pass
 
 
