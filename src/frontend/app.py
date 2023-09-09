@@ -1,19 +1,17 @@
+from typing import List, Tuple
+
 import pandas as pd
 import requests
 import streamlit as st
-from streamlit.runtime.state import session_state
-from typing import List, Tuple
 
 from conf import catalog, globals, paths
 
 st.set_page_config(
     page_title="Next Watch",
-    page_icon="🍿",  # 👋👋👋👋👋
+    page_icon="🍿",
 )
 
 user_limit = 1000000
-
-# col1, col2 = st.columns(2)
 
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = -1
@@ -50,12 +48,11 @@ def save_rating(selected_movie):
         },
     )
 
+
 def get_recommendations() -> List[Tuple]:
     response = requests.get(
         "http://fastapi:8000/recommendations/",
-        params={
-            "user_id": st.session_state.user_id
-        },
+        params={"user_id": st.session_state.user_id},
     )
     return response.json()
 
@@ -72,7 +69,6 @@ if st.session_state.user_id == -1:
     register_button = st.button("Register new user id")
 
     if existing_button:
-        #  st.markdown("### Select existing user id:")
         st.selectbox(
             "",
             users_list,
@@ -97,7 +93,6 @@ if st.session_state.user_id == -1:
 else:
     st.markdown(f"# Welcome back user {st.session_state.user_id}")
 
-
     st.markdown("### Rate a movie:")
     ratings_df_path = paths.get_path(
         paths.DATA_01EXTERNAL,
@@ -109,7 +104,7 @@ else:
     )
     ratings_df = pd.read_csv(ratings_df_path)
     movies_list = requests.get("http://fastapi:8000/movies_list/").json()
-    selected_movie = st.selectbox("", movies_list)#Select an existing user id:
+    selected_movie = st.selectbox("", movies_list)  # Select an existing user id:
     stars = st.slider(
         "",
         min_value=0.0,
@@ -122,7 +117,10 @@ else:
 
     recommendations = get_recommendations()
 
-    recommendations_df = pd.DataFrame(recommendations, columns=["id", "userid", "movieid", "title", "Score Likelihood", "rank"])
+    recommendations_df = pd.DataFrame(
+        recommendations,
+        columns=["id", "userid", "movieid", "title", "Score Likelihood", "rank"],
+    )
     st.markdown("### Movie recommendations for you:")
     st.table(recommendations_df[["rank", "title", "Score Likelihood"]])
 

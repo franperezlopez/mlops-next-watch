@@ -11,14 +11,15 @@ from sqlalchemy import (
     MetaData,
     UniqueConstraint,
     create_engine,
-    text,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, column_property, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from conf import catalog, globals, paths
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 
 load_dotenv(
     paths.get_path(
@@ -55,13 +56,11 @@ class User(Base):
 class Recommendations(Base):
     __tablename__ = os.getenv("POSTGRES_RECOMMENDATIONS_TABLE")
     id = Column(Integer, index=True, primary_key=True)
-    userid =  Column(Integer)
+    userid = Column(Integer)
     movieid = Column(Integer)
     prediction = Column(Float)
     rank = Column(Integer)
-    __table_args__ = (
-        UniqueConstraint('userid', 'rank', name='unique_user_rank'),
-    )
+    __table_args__ = (UniqueConstraint("userid", "rank", name="unique_user_rank"),)
 
 
 metadata = MetaData()
@@ -88,7 +87,9 @@ def get_user_ids(db: Session = Depends(get_db)):
 
 @app.get("/recommendations/", response_model=List[Tuple])
 def get_recommendations(user_id: int, db: Session = Depends(get_db)):
-    recommendations = db.query(Recommendations).filter(Recommendations.userid == user_id)
+    recommendations = db.query(Recommendations).filter(
+        Recommendations.userid == user_id, Recommendations.rank <= 5
+    )
     a = [
         (
             r.id,
@@ -96,7 +97,7 @@ def get_recommendations(user_id: int, db: Session = Depends(get_db)):
             r.movieid,
             movies_df[movies_df["movieId"] == r.movieid]["title"].item(),
             r.prediction,
-            r.rank
+            r.rank,
         )
         for r in recommendations
     ]
@@ -125,7 +126,7 @@ def add_rating(rating: float, selected_movie: str, user_id: int):
         catalog.Sources.MOVIELENS,
         catalog.Datasets.RATINGS,
         suffix=catalog.FileFormat.CSV,
-        storage=globals.Storage.DOCKER,
+        storage=globals.Storage.S3,
         as_string=True,
     )
     ratings_df = pd.read_csv(ratings_df_path)  # eeeeee
@@ -142,6 +143,8 @@ def add_rating(rating: float, selected_movie: str, user_id: int):
         "movieId": movie_row["movieId"].item(),
         "rating": rating,
         "timestamp": 122334,
+        "datetime": pd.to_datetime(ratings_df["datetime"].max())
+        + pd.to_timedelta(1, unit="m"),  # ()
     }
 
     # If there is a match, replace the existing row with the new values
@@ -149,7 +152,7 @@ def add_rating(rating: float, selected_movie: str, user_id: int):
         matching_rows.index[0] if not matching_rows.empty else len(ratings_df)
     ] = new_row
 
-    remote_ratingspath = paths.get_path(
+    remote_ratings_path = paths.get_path(
         paths.DATA_01EXTERNAL,
         catalog.Sources.MOVIELENS,
         catalog.Datasets.RATINGS,
@@ -160,12 +163,12 @@ def add_rating(rating: float, selected_movie: str, user_id: int):
     )
     # Save new ratings...
     ratings_df.to_csv(
-        remote_ratingspath,
+        remote_ratings_path,
         index=False,
         storage_options={
             "key": os.getenv("AWS_ACCESS_KEY_ID"),
             "secret": os.getenv("AWS_SECRET_ACCESS_KEY"),
         },
-    )  ### Important !!!
+    )
 
     return "Rating saved!!!"

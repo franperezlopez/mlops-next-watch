@@ -26,5 +26,5 @@ with open(aws_path, "w") as f:
     f.write(f"aws_access_key_id = {aws_access_key_id}\n")
     f.write(f"aws_secret_access_key = {aws_secret_access_key}\n")
 
-# Optionally, you can set the appropriate permissions on the file:
+# Set the appropriate permissions on the file
 os.chmod(aws_path, 0o600)

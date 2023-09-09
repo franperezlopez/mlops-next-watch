@@ -1,145 +1,119 @@
-import mlflow
-from hyperopt import STATUS_OK, Trials, fmin, hp, tpe
-from pyspark.ml import Pipeline
-from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.ml.recommendation import ALS
-from pyspark.sql import DataFrame, SparkSession
+from hyperopt import Trials, fmin, hp, tpe
+from pyspark.sql import SparkSession
 
-from conf import catalog, globals, params, paths
+from collaborative.models import als_model
+from conf import catalog, params, paths
 from utils.experiment_tracking import MLflowHandler
 
 
-def _train_als(train, val):
-    """Where the train is taken..."""
+class DataScienceNodes:
+    def __init__(
+        self,
+        session: SparkSession,
+        source: str,
+        dataset: str,
+        file_suffix: str,
+        storage: str,
+    ) -> None:
+        self.session = session
+        self.source = source
+        self.dataset = dataset  # catalog.Datasets.RATINGS
+        self.file_suffix = file_suffix  # catalog.FileFormat.PARQUET
+        self.storage = storage  # globals.Storage.S3
 
-    @MLflowHandler.log_train
-    def train_wrapper(params):
-        als = ALS(
-            userCol="userId",
-            itemCol="movieId",
-            ratingCol="rating",
-            rank=params["rank"],
-            regParam=params["reg_param"],
-            coldStartStrategy=params["cold_start_strategy"],
-            maxIter=params["max_iter"],
-        )
-
-        evaluator = RegressionEvaluator(
-            metricName=globals.MLflow.ALS_METRIC,
-            labelCol="rating",
-            predictionCol="prediction",
-        )
-
-        als_model = Pipeline(stages=[als])
-
-        model = als_model.fit(train)
-
-        predictions = model.transform(val)
-
-        metric = evaluator.evaluate(predictions)
-
-        return metric, model
-
-    return train_wrapper
-
-
-def split_train_test(session: SparkSession, source: str):
-    """Splits the training data into train and test sets"""
-    dataset = session.read.parquet(
-        paths.get_path(
+        self.processed_data_path = paths.get_path(
             paths.DATA_02PROCESSED,
-            source,
+            self.source,
             catalog.DatasetType.TRAIN,
-            catalog.Datasets.RATINGS,
-            suffix=catalog.FileFormat.PARQUET,
-            storage=globals.Storage.S3,
+            self.dataset,
+            suffix=self.file_suffix,
+            storage=self.storage,
             as_string=True,
         )
-    )
-    train, test = dataset.randomSplit([params.TRAIN, 1 - params.TRAIN], seed=42)
-    train.write.mode("overwrite").parquet(
-        paths.get_path(
+        self.train_data_path = paths.get_path(
             paths.DATA_03TRAIN,
-            source,
+            self.source,
             catalog.DatasetType.TRAIN,
-            catalog.Datasets.RATINGS,
-            suffix=catalog.FileFormat.PARQUET,
-            storage=globals.Storage.S3,
+            self.dataset,
+            suffix=self.file_suffix,
+            storage=self.storage,
             as_string=True,
         )
-    )
-    test.write.mode("overwrite").parquet(
-        paths.get_path(
+        self.test_data_path = paths.get_path(
             paths.DATA_03TRAIN,
-            source,
+            self.source,
             catalog.DatasetType.TEST,
-            catalog.Datasets.RATINGS,
-            suffix=catalog.FileFormat.PARQUET,
-            storage=globals.Storage.S3,
+            self.dataset,
+            suffix=self.file_suffix,
+            storage=self.storage,
             as_string=True,
         )
-    )
 
+    def _train_als(self, train, val):
+        """Where the train is taken..."""
 
-def hyperparam_opt_als(session: SparkSession, source: str):
-    """Performs hyper-parameter optimization
+        @MLflowHandler.log_train
+        def train_wrapper(params):
 
-    Args:
-        train (DataFrame): A `Spark` `DataFrame` containing the training set
+            model = als_model.get_model(params)
+            evaluator = als_model.get_model_evaluator()
 
-    """
+            model = model.fit(train)
 
-    rank = params.ALS.RANK
-    reg_param = params.ALS.REG_INTERVAL
-    cold_start_strat = params.ALS.COLD_START_STRATEGY
-    max_iter = params.ALS.MAX_ITER
+            predictions = model.transform(val)
 
-    space_search = {
-        "rank": hp.choice("rank", rank),
-        "reg_param": hp.uniform("reg_param", reg_param[0], reg_param[1]),
-        "cold_start_strategy": hp.choice("cold_start_strategy", cold_start_strat),
-        "max_iter": hp.choice("max_iter", max_iter),
-    }
+            metric = evaluator.evaluate(predictions)
 
-    train = session.read.parquet(
-        paths.get_path(
-            catalog.paths.DATA_03TRAIN,
-            source,
-            catalog.DatasetType.TRAIN,
-            catalog.Datasets.RATINGS,
-            suffix=catalog.FileFormat.PARQUET,
-            storage=globals.Storage.S3,
-            as_string=True,
+            return metric, model, predictions.toJSON().collect()
+
+        return train_wrapper
+
+    def split_train_test(self):
+        """
+        Splits the training data into train and test sets
+        """
+        dataset = self.session.read.parquet(self.processed_data_path)
+        train, test = dataset.randomSplit([params.TRAIN, 1 - params.TRAIN], seed=42)
+        train.write.mode("overwrite").parquet(self.train_data_path)
+        test.write.mode("overwrite").parquet(self.test_data_path)
+
+    def hyperparam_opt_als(self):
+        """Performs hyper-parameter optimization
+
+        Args:
+            train (DataFrame): A `Spark` `DataFrame` containing the training set
+
+        """
+
+        rank = params.ALS.RANK
+        reg_param = params.ALS.REG_INTERVAL
+        cold_start_strat = params.ALS.COLD_START_STRATEGY
+        max_iter = params.ALS.MAX_ITER
+
+        space_search = {
+            "rank": hp.choice("rank", rank),
+            "reg_param": hp.uniform("reg_param", reg_param[0], reg_param[1]),
+            "cold_start_strategy": hp.choice("cold_start_strategy", cold_start_strat),
+            "max_iter": hp.choice("max_iter", max_iter),
+        }
+
+        train = self.session.read.parquet(self.train_data_path)
+        val = self.session.read.parquet(self.test_data_path)
+
+        # FROM `hyperopt` docs: Do not use the SparkTrials class with MLlib. SparkTrials is designed to distribute trials for algorithms that are not themselves distributed.
+        trials = Trials()
+
+        self._run_hyperparam_opt(train, val, space_search, trials)
+
+    @MLflowHandler.log_hyperparam_opt
+    def _run_hyperparam_opt(self, train, val, space_search, trials):
+        # Start Hyper-Parameter Optimization
+        best = fmin(
+            fn=self._train_als(train=train, val=val),
+            space=space_search,
+            algo=tpe.suggest,
+            max_evals=5,
+            trials=trials,
         )
-    )
-    val = session.read.parquet(
-        paths.get_path(
-            catalog.paths.DATA_03TRAIN,
-            source,
-            catalog.DatasetType.TEST,
-            catalog.Datasets.RATINGS,
-            suffix=catalog.FileFormat.PARQUET,
-            storage=globals.Storage.S3,
-            as_string=True,
-        )
-    )
 
-    trials = (
-        Trials()
-    )  # FROM `hyperopt` docs: Do not use the SparkTrials class with MLlib. SparkTrials is designed to distribute trials for algorithms that are not themselves distributed.
-
-    _run_hyperparam_opt(train, val, space_search, trials)
-
-
-@MLflowHandler.log_hyperparam_opt
-def _run_hyperparam_opt(train, val, space_search, trials):
-    # Start Hyper-Parameter Optimization
-    best = fmin(
-        fn=_train_als(train=train, val=val),
-        space=space_search,
-        algo=tpe.suggest,
-        max_evals=5,
-        trials=trials,
-    )
-
-    return best
+        return best

@@ -6,7 +6,13 @@ import click
 import mlflow
 from dotenv import load_dotenv
 
-from collaborative.pipelines import pipelines
+from collaborative.pipelines import (
+    data_engineering,
+    data_science,
+    data_validation,
+    inference,
+    monitoring,
+)
 from conf import globals, paths
 
 
@@ -34,7 +40,7 @@ from conf import globals, paths
     "-u",
     "--userids",
     "user_ids",
-    default=[],#451, 597
+    default=[],
     type=int,
     multiple=True,
     nargs=1,
@@ -44,12 +50,17 @@ from conf import globals, paths
     "-n",
     "--nrecommendations",
     "n_recommendations",
-    default=5,
+    default=-1,
     type=int,
     nargs=1,
     help="Set a number of movie recommendations.",
 )
-def main(pipelines_to_run: str, experiment_name: str, user_ids: list[int], n_recommendations: int):
+def main(
+    pipelines_to_run: str,
+    experiment_name: str,
+    user_ids: list[int],
+    n_recommendations: int,
+):
     """Main Program
 
     Args:
@@ -61,37 +72,30 @@ def main(pipelines_to_run: str, experiment_name: str, user_ids: list[int], n_rec
     logging.getLogger("pyspark").setLevel(logging.DEBUG)
     logger.info("Running Next-Watch")
 
-
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     mlflow.set_experiment(experiment_name)
 
     mlflow.spark.autolog(disable=True)
 
-    print(list(user_ids))
     for p in pipelines_to_run:
-        print(p)
         if p == globals.Pipelines.DATA_ENGINEERING:
-            pipelines.data_engineering()
+            data_engineering.run()
         if p == globals.Pipelines.DATA_SCIENCE:
-            pipelines.data_science()
+            data_science.run()
         if p == globals.Pipelines.INFERENCE:
-            pipelines.batch_inference(list(user_ids), n_recommendations)
+            inference.run(list(user_ids), n_recommendations)
+        if p == globals.Pipelines.DATA_VALIDATION:
+            data_validation.run()
+        if p == globals.Pipelines.MONITOR:
+            monitoring.run()
 
 
 if __name__ == "__main__":
     # set time format for logger
     path_logging = paths.get_path(globals.Logs.CONFIG_FILE)
-    print(path_logging)
     logging.config.fileConfig(path_logging)
 
     # load environment variables
-
-    print(type(os.environ["DOCKER_RUNNING"]))
-    # print(
-    #    paths.DOCKER_ENV
-    #    if "DOCKER_RUNNING" in os.environ and os.environ["DOCKER_RUNNING"] == "true"
-    #    else paths.ENV
-    # )
     load_dotenv(
         paths.get_path(
             paths.ENV,
@@ -101,4 +105,3 @@ if __name__ == "__main__":
 
     # run `main`
     main()
-    

@@ -7,17 +7,17 @@ from conf import globals
 Paths for the Next Watch project
 """
 
-# BASE =   # if docker_running else   #
-_SRC = Path("src")
-_DATA = Path("data")
-DATA_01EXTERNAL = _DATA / "01-external"
-DATA_01RAW = _DATA / "01-raw"
-DATA_02PROCESSED = _DATA / "02-processed"
-DATA_03TRAIN = _DATA / "03-train"
+SRC = Path("src")
+DATA = Path("data")
+DATA_01EXTERNAL = DATA / "01-external"
+DATA_01RAW = DATA / "01-raw"
+DATA_02PROCESSED = DATA / "02-processed"
+DATA_03TRAIN = DATA / "03-train"
+DATA_04MONITORING = DATA / "04-monitoring"
 LOGS = "logs"
 ENV = ".env"
 ASSETS = "assets"
-
+SPARKML_TMP_DIR = "docker/sparktmp"
 
 def get_path(
     *args,

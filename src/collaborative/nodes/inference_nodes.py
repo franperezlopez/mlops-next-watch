@@ -1,7 +1,5 @@
-import pickle
 from typing import List
 
-import kafka
 import mlflow.pyfunc
 import mlflow.spark
 from pyspark import keyword_only
@@ -9,9 +7,16 @@ from pyspark.ml import Transformer
 from pyspark.ml.param import Param, Params, TypeConverters
 from pyspark.ml.param.shared import HasInputCols, HasOutputCols
 from pyspark.ml.util import DefaultParamsReadable, DefaultParamsWritable
-from pyspark.sql import DataFrame, Row, SparkSession
-from pyspark.sql.functions import col, rank
+from pyspark.sql import DataFrame
+from pyspark.sql.functions import (
+    current_timestamp,
+    monotonically_increasing_id,
+    rank,
+    row_number,
+)
 from pyspark.sql.window import Window
+
+from conf import globals, paths
 
 
 def fetch_latest_model(model_name: str, stage: str):
@@ -20,40 +25,20 @@ def fetch_latest_model(model_name: str, stage: str):
     Returns:
         - a model instance
     """
+    sparkml_tmp_dir = paths.get_path(
+        paths.SPARKML_TMP_DIR, storage=globals.Storage.DOCKER, as_string=True
+    )
     model = mlflow.spark.load_model(
         model_uri=f"models:/{model_name}/{stage}",
-        dfs_tmpdir="/sparktmp",
-        dst_path="/sparktmp",
+        dfs_tmpdir=sparkml_tmp_dir,
+        dst_path=sparkml_tmp_dir,
     )
     return model
-
-
-# def create_inference_data_for_users(ratings: DataFrame, user_ids_df: DataFrame):  #
-#    # Get all movieIds for each user
-#    user_rated_movie_ids = ratings.join(user_ids_df, on="userId").select(
-#        "userId", "movieId"
-#    )
-#
-#    # Get all distinct movieIds in the ratings DataFrame
-#    all_movie_ids = ratings.select("movieId").distinct()
-#
-#    # Get unrated movieIds for each user
-#    unrated_movies = all_movie_ids.join(
-#        user_rated_movie_ids, on="movieId", how="left_anti"
-#    )
-#
-#    # Cross join unrated movieIds with the user_ids to get inference data
-#    inference_data = unrated_movies.crossJoin(user_ids_df)
-#
-#    print(inference_data.columns)
-#
-#    return inference_data
 
 
 class CreateInferenceDataTransformer(
     Transformer, HasInputCols, HasOutputCols, DefaultParamsReadable, DefaultParamsWritable
 ):
-
     # Create user ids df param... (for input cols, we inherent from `HasInputCols`, for instance).
     user_ids_df = Param(
         Params._dummy(),
@@ -82,7 +67,6 @@ class CreateInferenceDataTransformer(
         return self.getOrDefault(self.user_ids_df)
 
     def _transform(self, ratings: DataFrame):
-
         user_ids: DataFrame = self.get_user_ids_df()
 
         # Get all movieIds for each user
@@ -103,15 +87,14 @@ class CreateInferenceDataTransformer(
 
         return inference_data
 
-    # https://stackoverflow.com/questions/41399399/serialize-a-custom-transformer-using-python-to-be-used-within-a-pyspark-ml-pipel
-    # https://csyhuang.github.io/2020/08/01/custom-transformer/
-    # create Leap Frames: https://combust.github.io/mleap-docs/mleap-runtime/create-leap-frame.html
+        # https://stackoverflow.com/questions/41399399/serialize-a-custom-transformer-using-python-to-be-used-within-a-pyspark-ml-pipel
+        # https://csyhuang.github.io/2020/08/01/custom-transformer/
+        # create Leap Frames: https://combust.github.io/mleap-docs/mleap-runtime/create-leap-frame.html
 
 
 class ModelTransformer(
     Transformer, HasOutputCols, DefaultParamsReadable, DefaultParamsWritable
 ):
-
     model = Param(
         Params._dummy(),
         "model",
@@ -143,7 +126,6 @@ class ModelTransformer(
 class RecommendationsTransformer(
     Transformer, HasOutputCols, DefaultParamsReadable, DefaultParamsWritable
 ):
-
     n_recommendations = Param(
         Params._dummy(),
         "n_recommendations",
@@ -178,45 +160,19 @@ class RecommendationsTransformer(
             predictions["prediction"].desc()
         )
         recommendations = (
-            predictions.select(
+            predictions.withColumn(
+                "datetime", current_timestamp()  # date_format(, "yyyy/MM/dd hh:mm:ss")
+            )
+            .withColumn(
+                "index",
+                row_number().over(Window.orderBy(monotonically_increasing_id())),
+            )
+            .select(
+                "index",
                 *self.getOutputCols(),
                 rank().over(window).alias("rank"),
+                "datetime",
             )
-            .filter(col("rank") <= self.get_n_recommendations())
-            .rdd.map(lambda r: (r[0], r[1], r[2], r[3]))
+            .rdd.map(lambda r: (r[0], r[1], r[2], r[3], r[4], r[5]))
         )
         return recommendations
-
-
-def recommend_movies(  # TODO: TRANSFORM THIS FUNCTION Into a Custom Transformer also...
-    model,
-    kafka_prod: kafka.KafkaProducer,
-    kafka_topic: str,
-    inference_data: DataFrame,
-    n_recommendations: int,
-):
-    """Recommends movies to a user
-
-    Returns:
-        - `n` movie recommendations
-    """
-    predictions = model.transform(inference_data)
-    window = Window.partitionBy(predictions["userId"]).orderBy(
-        predictions["prediction"].desc()
-    )
-    recommendations = (
-        predictions.select(
-            col("userId"),
-            col("movieId"),
-            col("prediction"),
-            rank().over(window).alias("rank"),
-        )
-        .filter(col("rank") <= n_recommendations)
-        .rdd.map(lambda r: (r[0], r[1], r[2], r[3]))
-        .collect()
-    )
-
-    kafka_prod.send(kafka_topic, pickle.dumps(recommendations))
-    kafka_prod.flush()
-
-    return recommendations

@@ -25,9 +25,12 @@ class Pipelines:
 
     DATA_SCIENCE = "ds"
     DATA_ENGINEERING = "de"
+    DATA_VALIDATION = "dv"
     DS = "ds"
     DE = "de"
+    DV = "dv"
     INFERENCE = "inference"
+    MONITOR = "monitor"
 
 
 class Logs:

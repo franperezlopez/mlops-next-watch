@@ -18,7 +18,7 @@ session = (
     .getOrCreate()
 )
 
-url = "jdbc:postgresql://postgres:5432/app"
+url = f"jdbc:postgresql://{os.getenv('POSTGRES_IP')}:{os.getenv('POSTGRES_PORT')}/app"
 properties = {
     "user": os.getenv("POSTGRES_USER"),
     "password": os.getenv("POSTGRES_PASSWORD"),
@@ -30,14 +30,7 @@ ext_filepath = paths.get_path(
     paths.DATA_01EXTERNAL,
     catalog.Sources.MOVIELENS,
     catalog.Datasets.RATINGS,
-    suffix=catalog.FileFormat.CSVCREATE TABLE accounts (
-	user_id serial PRIMARY KEY,
-	username VARCHAR ( 50 ) UNIQUE NOT NULL,
-	password VARCHAR ( 50 ) NOT NULL,
-	email VARCHAR ( 255 ) UNIQUE NOT NULL,
-	created_on TIMESTAMP NOT NULL,
-        last_login TIMESTAMP 
-);,
+    suffix=catalog.FileFormat.CSV,
     as_string=True,
 )
 remote_ext_filepath = paths.get_path(

@@ -43,15 +43,8 @@ nosetests.xml
 coverage.xml
 *.cover
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
+# .log Files
 *.log
-
-# Sphinx documentation
-docs/_build/
 
 # PyBuilder
 target/
@@ -69,6 +62,10 @@ target/
 # VS Code
 .vscode/
 
+# Vim
+*.swp
+*.swo
+
 # Spyder
 .spyproject/
 
@@ -76,16 +73,10 @@ target/
 .ipynb_checkpoints/
 
 # Exclude data from source control by default
-# data/*
 data/**/* 
-#data/**/*.txt#.csv
 
 # Mac OS-specific storage files
 .DS_Store
-
-# Vim
-*.swp
-*.swo
 
 # Mypy cache
 .mypy_cache/
@@ -105,7 +96,7 @@ old/
 mlruns/
 
 # logs
-logs/*
+**/logs/*
 
 # Ignore unused dirs (to remove bloated proj **for now**)
 docs/
@@ -113,12 +104,17 @@ references/
 reports/
 models/
 
+# Project assets
 assets/*
+
+# Airflow
+airflow/
+
+# Old files
+.old/
 
 # Keep data directories structure
 #!data/**/
 #!data/**/.gitkeep
 !**/.gitkeep
 requirements.dist
-
-

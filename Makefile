@@ -40,25 +40,26 @@ environment:
 
 ## Config databases, init programs, etc...
 init:
+	echo -e "AIRFLOW_UID=$(id -u)" > .env
 	docker compose build --no-cache
 	docker compose up postgres create-databases
+	docker compose up airflow-init
 	cd src
 	python3.9 scripts/create_aws_credentials_file.py
 	cd ..
-	#docker compose up airflow-init
 	#docker compose down --volumes --remove-orphans 
-
-## Run DE pipelines
-run-de:
-	docker compose exec dev-spark bash -c "cd src; python3.9 main.py -p 'de'"
 
 ## Populate Databse with Users from production datasets
 pop-db-users:
-	docker compose exec dev-spark bash -c "cd src; python3.9 scripts/populate_db_with_users.py"
+	docker compose exec dev-spark bash -c "python3.9 src/scripts/populate_db_with_users.py"
+
+## Run DE pipelines
+run-de:
+	docker compose exec dev-spark bash -c "python3.9 src/main.py -p 'de'"
 
 ## Run DS pipelines
 run-ds:
-	docker compose exec dev-spark bash -c "cd src; python3.9 main.py -p 'ds'"
+	docker compose exec dev-spark bash -c "python3.9 src/main.py -p 'ds'"
 
 ## Delete all compiled Python files
 clean:
