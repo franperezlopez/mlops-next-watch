@@ -107,8 +107,6 @@ models/
 # Project assets
 assets/*
 
-# Airflow
-airflow/
 
 # Old files
 .old/
