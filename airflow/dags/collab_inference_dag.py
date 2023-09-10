@@ -30,7 +30,7 @@ with DAG(
     dag_id="collab_inference_dag",
     description="Dag for batch Inference and Monitoring collab",
     start_date=datetime(2023, 1, 1),
-    schedule_interval=timedelta(minutes=5),
+    schedule_interval=timedelta(minutes=15),
     catchup=False,
     default_args=default_args,
 ) as inference_dag:

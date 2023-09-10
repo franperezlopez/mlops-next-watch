@@ -30,7 +30,7 @@ with DAG(
     dag_id="collab_training_dag",
     description="Dag for DE and DS collab",
     start_date=datetime(2023, 1, 1),
-    schedule_interval=timedelta(minutes=5),
+    schedule_interval=timedelta(minutes=15),
     catchup=False,
     default_args=default_args,
 ) as training_dag:

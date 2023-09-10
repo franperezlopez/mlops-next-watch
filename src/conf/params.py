@@ -1,3 +1,15 @@
+import os
+
+from dotenv import load_dotenv
+
+from conf import globals, paths
+
+load_dotenv(
+    paths.get_path(
+        paths.ENV,
+    )
+)
+
 """
 Training Parameters
 """
@@ -9,18 +21,6 @@ RAW: float = 0.05
 TRAIN: float = 0.80
 
 SEED: int = 42
-
-import os
-
-from dotenv import load_dotenv
-
-from conf import paths, globals
-
-load_dotenv(
-    paths.get_path(
-        paths.ENV,
-    )
-)
 
 
 class ALS:
@@ -35,8 +35,8 @@ class ALS:
 
 
 class Monitoring:
-    TARGET_DRIFT_THR = 0.30
-    DATA_DRIFT_THR = 0.10
+    TARGET_DRIFT_THR = 0.10
+    DATA_DRIFT_THR = 0.80
 
 
 class Spark:

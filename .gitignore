@@ -102,7 +102,6 @@ mlruns/
 docs/
 references/
 reports/
-models/
 
 # Project assets
 assets/*

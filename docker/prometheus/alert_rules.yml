@@ -1,0 +1,13 @@
+groups:
+- name: MLDriftAlerts
+
+  rules:
+  - alert: TargetDriftAlert
+    expr: |
+      prediction_drift{job="evidently_metrics"} > 0.1
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: Target Drift present in production
+      description: "{{$labels.instance}}: Target Drift present in {{$labels.job}}  exceeded 10% for 3 minutes."
