@@ -5,8 +5,6 @@
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
-PROFILE = default
 PROJECT_NAME = next-watch-teste
 PYTHON_INTERPRETER = python3.9
 CONDA_FOLDER_NAME = conda
@@ -37,6 +35,12 @@ requirements: test_environment
 ## Generate requirements for distributable packages.jar
 environment:
 	pip list --format=freeze > requirements.dist
+
+## Pull datasets from sources
+datasets:
+	curl -o data/01-external/ml-100k.zip https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
+	unzip -j data/01-external/ml-100k.zip "ml-latest-small/*" -d movielens
+	rm data/01-external/ml-100k.zip
 
 ## Config databases, init programs, etc...
 init:
