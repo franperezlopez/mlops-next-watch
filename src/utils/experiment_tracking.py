@@ -4,6 +4,7 @@ from typing import Union
 import mlflow
 import mlflow.data
 from hyperopt import STATUS_OK, Trials
+from mlflow import MlflowClient
 
 from conf import globals, paths
 
@@ -32,7 +33,7 @@ class MLflowHandler(ExperimentTracking):
     @classmethod
     def log_train(cls, training_func):
         """
-        MLflow training log implementation
+        MLflow training log implementation to be used as a decorator
         """
 
         def log_train_wrapper(params):
@@ -69,7 +70,7 @@ class MLflowHandler(ExperimentTracking):
     @classmethod
     def log_hyperparam_opt(cls, hyperparam_func):
         """
-        Mlflow hyperparam optimization implementation
+        Mlflow hyperparam optimization implementation to be used as a decorator
         """
 
         def log_hyperparam_wrapper(node_class, train, val, space_search, trials):
@@ -80,12 +81,14 @@ class MLflowHandler(ExperimentTracking):
                 best = hyperparam_func(node_class, train, val, space_search, trials)
 
                 # Log best trail/run
-                client, best_run_id, best_trial_params = MLflowHandler._log_best_trial(
+                client, best_run_id, best_run_metric, best_run_params = MLflowHandler._log_best_trial(
                     run, trials
                 )
+                metric_of_model_in_registry = MLflowHandler._get_metric_of_model_in_registry(globals.MLflow.ALS_REGISTERED_MODEL_NAME, "Production")
 
-                # Register best model in Mlflow Model Registry
-                MLflowHandler._register_best_model(client, best_run_id)
+                if best_run_metric > metric_of_model_in_registry:
+                    # Register best model in Mlflow Model Registry
+                    MLflowHandler._register_best_model(client, best_run_id)
 
         return log_hyperparam_wrapper
 
@@ -106,13 +109,32 @@ class MLflowHandler(ExperimentTracking):
         )
         best_run = min(runs, key=lambda run: run.data.metrics[globals.MLflow.ALS_METRIC])
         best_run_id = best_run.info.run_id
+        best_metric = best_run.data.metrics[globals.MLflow.ALS_METRIC]
         mlflow.set_tag("best_run", best_run_id)
-        mlflow.log_metric("best_metric", best_run.data.metrics[globals.MLflow.ALS_METRIC])
+        mlflow.log_metric("best_metric", best_metric)
         mlflow.log_dict(
             best_trial_params, "best_params.json"
         )  # TODO: Change to log_params...
         # mlflow.log_dict(best_predictions, "best_predictions.json")
-        return client, best_run_id, best_trial_params
+        return client, best_run_id, best_metric, best_trial_params
+
+    @classmethod
+    def _get_info_of_model_in_registry(cls, model_name: str, stage: str) :
+        model_uri = f"models:/{model_name}/{stage}"
+        model_info = mlflow.models.get_model_info(model_uri)
+        return model_info
+        
+    @classmethod
+    def _get_metric_of_model_in_registry(cls, model_name: str, stage: str) -> int:
+        model_in_registry_info = MLflowHandler._get_info_of_model_in_registry(model_name, stage)
+        model_metric_history = mlflow.tracking.MlflowClient().get_metric_history(model_in_registry_info.run_id, "rmse")
+        try:
+            model_metric = model_metric_history[0].value
+        except Exception as exception:
+            raise Exception(f"I wasn't able to get model metric from the registry, exception {exception} occurred.")
+
+        return model_metric
+            
 
     @classmethod
     def _register_best_model(cls, client: mlflow.tracking.MlflowClient, run_id: str):
@@ -131,8 +153,7 @@ class MLflowHandler(ExperimentTracking):
     def get_artifacts_from_model(
         cls, model_name: str, stage: str, artifact_path: str, as_dict=True
     ) -> Union[dict, str]:
-        model_uri = f"models:/{model_name}/{stage}"
-        model_info = mlflow.models.get_model_info(model_uri)
+        model_info = MLflowHandler._get_info_of_model_in_registry(model_name, stage)
         artifact_local_path = mlflow.artifacts.download_artifacts(
             run_id=model_info.run_id, artifact_path=artifact_path
         )
@@ -141,3 +162,20 @@ class MLflowHandler(ExperimentTracking):
             if as_dict
             else artifact_local_path
         )
+
+    @classmethod
+    def fetch_latest_model(cls, model_name: str, stage: str):
+        """Fetch the latest model from MLFlow in a given stage
+
+        Returns:
+            - a model instance
+        """
+        sparkml_tmp_dir = paths.get_path(
+            paths.SPARKML_TMP_DIR, storage=globals.Storage.DOCKER, as_string=True
+        )
+        model = mlflow.spark.load_model(
+            model_uri=f"models:/{model_name}/{stage}",
+            dfs_tmpdir=sparkml_tmp_dir,
+            dst_path=sparkml_tmp_dir,
+        )
+        return model

@@ -8,9 +8,9 @@ from collaborative.nodes.inference_nodes import (
     CreateInferenceDataTransformer,
     ModelTransformer,
     RecommendationsTransformer,
-    fetch_latest_model,
 )
 from conf import catalog, globals, params, paths
+from utils.experiment_tracking import MLflowHandler
 from utils.psycopg_handler import PsycopgHandler
 
 
@@ -60,7 +60,7 @@ def run(
         [(user_id,) for user_id in user_ids], ["userId"]
     )
 
-    model = fetch_latest_model(model_name=model_name, stage=model_stage)
+    model = MLflowHandler.fetch_latest_model(model_name=model_name, stage=model_stage)
 
     # Init Inference Transformers
     create_inference_data_transformer = CreateInferenceDataTransformer(

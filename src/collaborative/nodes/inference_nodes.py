@@ -1,7 +1,5 @@
 from typing import List
 
-import mlflow.pyfunc
-import mlflow.spark
 from pyspark import keyword_only
 from pyspark.ml import Transformer
 from pyspark.ml.param import Param, Params, TypeConverters
@@ -15,25 +13,6 @@ from pyspark.sql.functions import (
     row_number,
 )
 from pyspark.sql.window import Window
-
-from conf import globals, paths
-
-
-def fetch_latest_model(model_name: str, stage: str):
-    """Fetch the latest model from MLFlow in a given stage
-
-    Returns:
-        - a model instance
-    """
-    sparkml_tmp_dir = paths.get_path(
-        paths.SPARKML_TMP_DIR, storage=globals.Storage.DOCKER, as_string=True
-    )
-    model = mlflow.spark.load_model(
-        model_uri=f"models:/{model_name}/{stage}",
-        dfs_tmpdir=sparkml_tmp_dir,
-        dst_path=sparkml_tmp_dir,
-    )
-    return model
 
 
 class CreateInferenceDataTransformer(

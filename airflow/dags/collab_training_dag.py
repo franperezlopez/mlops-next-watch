@@ -37,8 +37,8 @@ with DAG(
     de = SparkSubmitOperator(**params.Airflow.de_operator, conf=params.Spark.spark_config)
     dv = SparkSubmitOperator(**params.Airflow.dv_operator, conf=params.Spark.spark_config)
     ds = SparkSubmitOperator(**params.Airflow.ds_operator, conf=params.Spark.spark_config)
-    register_first_train_xcom = PythonOperator(
+    register_first_train_var = PythonOperator(
         task_id="register_first_train",
         python_callable=create_first_train_variable,
     )
-    de >> dv >> ds >> register_first_train_xcom
+    dv >> de >> ds >> register_first_train_var
