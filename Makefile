@@ -5,7 +5,7 @@
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-PROJECT_NAME = next-watch-teste
+PROJECT_NAME = nwenv
 PYTHON_INTERPRETER = python3.9
 CONDA_FOLDER_NAME = conda
 
