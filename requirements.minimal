@@ -22,4 +22,3 @@ psycopg2-binary==2.9.7
 prometheus-client==0.17.1
 prometheus-fastapi-instrumentator==6.1.0
 apache-airflow-providers-apache-spark==4.1.4
-minio==7.1.16

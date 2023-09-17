@@ -20,7 +20,7 @@ endif
 #################################################################################
 
 ## Install Python Dependencies
-requirements: test_environment
+dependencies: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.minimal
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.local
@@ -33,7 +33,7 @@ requirements: test_environment
 	#cp ./assets/hadoop-common-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
 
 ## Generate requirements for distributable packages.jar
-environment:
+envfile:
 	pip list --format=freeze > requirements.dist
 
 ## Pull datasets from sources
@@ -54,15 +54,15 @@ init:
 	#docker compose down --volumes --remove-orphans 
 
 ## Populate Databse with Users from production datasets
-pop-db-users:
+users:
 	docker compose exec dev-spark bash -c "python3.9 src/scripts/populate_db_with_users.py"
 
 ## Run DE pipelines
-run-de:
+de:
 	docker compose exec dev-spark bash -c "python3.9 src/main.py -p 'de'"
 
 ## Run DS pipelines
-run-ds:
+ds:
 	docker compose exec dev-spark bash -c "python3.9 src/main.py -p 'ds'"
 
 ## Delete all compiled Python files
@@ -83,7 +83,7 @@ sort:
 	isort src
 
 ## Set up python interpreter environment
-create_environment:
+env:
 ifeq (True,$(HAS_CONDA))
 		@echo ">>> Detected conda, creating conda environment."
 ifeq (3,$(findstring 3,$(PYTHON_INTERPRETER)))

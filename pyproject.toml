@@ -21,3 +21,7 @@ profile = "black"
 line_length = 79
 multi_line_output = 3
 include_trailing_comma = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
