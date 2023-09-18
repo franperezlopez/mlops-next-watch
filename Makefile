@@ -6,7 +6,7 @@
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = nwenv
-PYTHON_INTERPRETER = python3.9
+PYTHON_INTERPRETER = python3
 CONDA_FOLDER_NAME = conda
 
 ifeq (,$(shell which conda))
@@ -22,8 +22,8 @@ endif
 ## Install Python Dependencies
 dependencies: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.minimal
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.local
+	$(PYTHON_INTERPRETER) -m pip install -r requirements.minimal
 	sudo curl -o ./assets/hadoop-aws-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar
 	sudo curl -o ./assets/aws-java-sdk-bundle-1.12.506.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.506/aws-java-sdk-bundle-1.12.506.jar
 	sudo curl -o ./assets/hadoop-common-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar
@@ -39,19 +39,20 @@ envfile:
 ## Pull datasets from sources
 datasets:
 	curl -o data/01-external/ml-100k.zip https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
-	unzip -j data/01-external/ml-100k.zip "ml-latest-small/*" -d movielens
+	unzip -j data/01-external/ml-100k.zip "ml-latest-small/*" -d data/01-external/movielens
 	rm data/01-external/ml-100k.zip
 
 ## Config databases, init programs, etc...
 init:
-	echo -e "AIRFLOW_UID=$(id -u)" > .env
+	echo "AIRFLOW_UID=$$(id -u)" > .env
 	docker compose build --no-cache
-	docker compose up postgres create-databases
-	docker compose up airflow-init
-	cd src
-	python3.9 scripts/create_aws_credentials_file.py
-	cd ..
-	#docker compose down --volumes --remove-orphans 
+	docker compose up postgres create-databases airflow-init --exit-code-from airflow-init
+	$(PYTHON_INTERPRETER) src/scripts/create_aws_credentials_file.py
+	docker compose down --volumes --remove-orphans
+
+## Run Docker Compose
+run:
+	docker compose up
 
 ## Populate Databse with Users from production datasets
 users:
