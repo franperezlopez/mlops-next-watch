@@ -8,32 +8,56 @@ A MLOps project for movie recommendations!
 
 ## Prerequisites
 - Python
-- Conda | Venv
+- Conda or Venv
+- Docker
 
 ## Installation and Quick Start
 1. Clone the repo
 ```sh
 git clone https://github.com/brnaguiar/mlops-next-watch.git
+
 ```
 
 2. Create environment
 ```sh
-make create_environment
+make env
 ```
 
-3. Install requirements
+3. Install requirements / dependencies and assets
 ```sh
-make requirements
+make dependencies
 ```
 
-4. Create a `.env` file (`.env` sample below)
+4. Pull the datasets
+```sh
+    make datasets
+```
 
+5. Configure containers and secrets
+```sh
+    make init
+```
+
+6. Run Docker Compose
+```sh
+    make run
+```
+
+7. Populate production Database with users
+```sh
+    make users
+```
+
+## Architecture
+<img src="./images/project_diagram2.svg">
+<!-- #4. Create a `.env` file (`.env` sample below)#
 5. Run the the project!
 ```sh
 make run
 ```
+-->
 
-#
+
 <!-- PROJECT LOGO -->
 <!--
 Project Organization
