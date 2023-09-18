@@ -3,7 +3,7 @@
 
 MLOps  MLOps project for movie recommendations. -->
 
-<img src="images/nextwatch.png" alt="Logo" width="170" height="100">
+<img src="images/nextwatch.png" alt="Logo" width="250" height="150">
 A MLOps project for movie recommendations!
 
 ## Prerequisites
@@ -30,22 +30,22 @@ make dependencies
 
 4. Pull the datasets
 ```sh
-    make datasets
+make datasets
 ```
 
 5. Configure containers and secrets
 ```sh
-    make init
+make init
 ```
 
 6. Run Docker Compose
 ```sh
-    make run
+make run
 ```
 
 7. Populate production Database with users
 ```sh
-    make users
+make users
 ```
 
 ## Architecture
