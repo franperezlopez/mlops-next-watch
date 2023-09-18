@@ -7,7 +7,7 @@ MLOps  MLOps project for movie recommendations. -->
 <img src="images/nextwatch.png" alt="Logo" width="210" height="110"/>
 </p>
 <p align="center">
-A MLOps project for movie recommendations!
+An E2E MLOps project with Spark Pipelines for movie recommendations!
 </p>
 
 ## Prerequisites
