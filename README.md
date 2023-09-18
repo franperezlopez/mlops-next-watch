@@ -3,8 +3,10 @@
 
 MLOps  MLOps project for movie recommendations. -->
 
-<img src="images/nextwatch.png" alt="Logo" width="250" height="150">
+<p align="center">
+<img src="images/nextwatch.png" alt="Logo" width="210" height="110">
 A MLOps project for movie recommendations!
+</p>
 
 ## Prerequisites
 - Python
