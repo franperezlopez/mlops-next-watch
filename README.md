@@ -49,7 +49,7 @@ make dependencies
 ```
 
 ## Architecture
-<img src="./images/project_diagram2.svg">
+<img src="./images/project_diagram.svg">
 <!-- #4. Create a `.env` file (`.env` sample below)#
 5. Run the the project!
 ```sh
