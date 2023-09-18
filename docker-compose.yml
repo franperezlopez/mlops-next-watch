@@ -55,7 +55,7 @@ services:
 
   postgres:
     restart: always
-    image: postgres
+    image: postgres:15
     container_name: postgres
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
@@ -77,7 +77,7 @@ services:
       start_period: 5s
   
   create-databases:
-    image: postgres
+    image: postgres:15
     depends_on:
       - postgres
     networks:
@@ -102,7 +102,7 @@ services:
       psql -h postgres -U ${POSTGRES_USER} -d ${POSTGRES_APP_DATABASE} -c "CREATE TABLE ${POSTGRES_RECOMMENDATIONS_TABLE} (id INTEGER, userid INTEGER, movieid INTEGER, prediction FLOAT, rank INTEGER, datetime TIMESTAMP, CONSTRAINT unique_rank UNIQUE(userid,rank))";'
 
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2023-09-16T01-01-47Z.fips
     ports:
       - "${MINIO_PORT_SERVER}:${MINIO_PORT_SERVER}"
       - "${MINIO_PORT_CONSOLE}:${MINIO_PORT_CONSOLE}"
@@ -127,7 +127,7 @@ services:
       retries: 3
 
   create-buckets:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2023-09-13T23-08-58Z
     container_name: minio-create-buckets
     depends_on:
       - minio
@@ -285,53 +285,6 @@ services:
       - "${STREAMLIT_PORT}:${STREAMLIT_PORT}"
     volumes:
       - ./:/app:r
-
-  #kafka:
-  #  image: docker.io/bitnami/kafka:3.5.1
-  #  networks:
-  #    - nwnet
-  #  ports:
-  #    - "${KAFKA_PORT}:${KAFKA_PORT}"
-  #  volumes:
-  #    - "kafka-data:/bitnami"
-  #  environment:
-  #    # KRaft settings
-  #    - KAFKA_CFG_NODE_ID=0
-  #    - KAFKA_CFG_PROCESS_ROLES=controller,broker
-  #    - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:${KAFKA_PORT_CONTROLLER}
-  #    # Listeners#kafka-topics#kafka-topics#kafka-topics
-  #    - KAFKA_CFG_LISTENERS=PLAINTEXT://${KAFKA_IP}:${KAFKA_PORT},CONTROLLER://${KAFKA_IP}:${KAFKA_PORT_CONTROLLER}
-  #    - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://${KAFKA_IP}:${KAFKA_PORT}
-  #    - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-  #    - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-  #    - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-
-  #init-kafka:
-  #  image: docker.io/bitnami/kafka:3.5.1
-  #  depends_on:  
-  #    - kafka
-  #  entrypoint: [ '/bin/sh', '-c' ]
-  #  command: |
-  #    "
-  #    /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:${KAFKA_PORT} --list 
-  #    /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:${KAFKA_PORT} --create --if-not-exists --topic ${KAFKA_RECOMMENDATIONS_TOPIC} --replication-factor 1 --partitions 1
-  #    /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:${KAFKA_PORT} --create --if-not-exists --topic teste --replication-factor 1 --partitions 1
-  #    echo -e 'Successfully created the following topics:'
-  #    /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka:${KAFKA_PORT} --list
-  #    "
-  #kafka-pred-consumer:
-  #  build: 
-  #    context: ./
-  #    dockerfile:  ./docker/kafka-pred-consumer/Dockerfile
-  #  image: kafka-pred-consumer
-  #  container_name: kafka-pred-consumer
-  #  networks:
-  #    - nwnet
-  #  volumes:
-  #    - ./:/app:r
-  #  depends_on:
-  #    - postgres
-  #    #- ./src:/usr/local/lib/python3.9/site-packages
 
   pushgateway:
     image: prom/pushgateway
