@@ -44,7 +44,7 @@ datasets:
 
 ## Config databases, init programs, etc...
 init:
-	echo "AIRFLOW_UID=$$(id -u)" > .env
+	echo "AIRFLOW_UID=$$(id -u)" >> .env
 	docker compose build --no-cache
 	docker compose up postgres create-databases airflow-init --exit-code-from airflow-init
 	$(PYTHON_INTERPRETER) src/scripts/create_aws_credentials_file.py
