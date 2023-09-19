@@ -6,9 +6,10 @@ MLOps  MLOps project for movie recommendations. -->
 <p align="center">
 <img src="images/nextwatch.png" alt="Logo" width="210" height="110"/>
 </p>
-<p align="center">
-An E2E MLOps project with Spark Pipelines for movie recommendations!
-</p>
+
+# Next Watch: E2E MLOps Pipelines with Spark!
+![CI](https://github.com/brnaguiar/mlops-next-watch/actions/workflows/behavioral_tests.yml/badge.svg?event=push)
+
 
 ## Prerequisites
 - Python
