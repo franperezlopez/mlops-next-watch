@@ -7,8 +7,8 @@ from conf import catalog, globals, params
 def run(
     source: str = catalog.Sources.MOVIELENS,
     dataset: str = catalog.Datasets.RATINGS,
-    file_suffix: str = catalog.FileFormat.PARQUET,
-    storage=globals.Storage.S3,
+    file_suffix: str = catalog.FileFormat.CSV,
+    storage=globals.Storage.DOCKER,
 ):
     session = (
         SparkSession.builder.appName("collab-dv")
