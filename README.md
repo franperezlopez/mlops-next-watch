@@ -77,7 +77,7 @@ make users
 
 ## Service Endpoints Showcase
 
-### Streamlit Frotend App
+### Streamlit Frontend App
 <img src="./images/streamlit_ui.png"/>
 
 ### MLflow UI
