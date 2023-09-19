@@ -61,21 +61,49 @@ make users
 ## Useful Service Endpoints
 ```
 - Jupyter `http://localhost:8888`
-- Minio `http://localhost:9001`
 - MLFlow `http://localhost:5000`
-- FastAPI `http://localhost:8086/`
-- Streamlit UI `http://localhost:8501`
+- Minio Console `http://localhost:9001`
+- Airflow `http://localhost:8080`
+- Streamlit Frontend `http://localhost:8501`
+- FastAPI Backend` http://localhost:8000/`
 - Grafana Dashboard `http://localhost:3000`
+- Prometheus `http://localhost:9090`
+- Pushgateway `http://localhost:9091`
+- Spark UI `http://localhost:8081`
 ```
+
 ## Architecture
-<img src="./images/project_diagram.jpg">
+<img src="./images/project_diagram.jpg"/>
+
+## Service Endpoints Showcase
+
+### Streamlit Frotend App
+<img src="./images/streamlit_ui.png"/>
+
+### MLflow UI
+<img src="./images/mlflow_ui.png"/>
+
+### Minio UI
+<img src="./images/minio_ui.png"/>
+
+### Airflow UI
+<img src="./images/airflow_ui.png"/>
+
+### Grafana UI
+<img src="./images/grafana_ui.png"/>
+
+### Prometheus UI
+<img src="./images/prometheus_ui.png"/>
+
+### Prometheus Drift Detection Example
+<img src="./images/prometheus_ui_drift_warning.png"/>
+
 <!-- #4. Create a `.env` file (`.env` sample below)#
 5. Run the the project!
 ```sh
 make run
 ```
 -->
-
 
 <!-- PROJECT LOGO -->
 <!--
@@ -130,6 +158,8 @@ Project Organization
 
 --------
 -->
+
+
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. 
 
 <!-- #cookiecutterdatascience</small></p> -->
