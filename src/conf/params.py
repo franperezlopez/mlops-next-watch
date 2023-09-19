@@ -83,11 +83,11 @@ class Airflow:
     postgres_conn_config: dict = {
         "conn_id": "postgres_connection",
         "conn_type": "postgres",
-        "host": f"{os.getenv('postgres_ip')}",
-        "login": f"{os.getenv('pguser')}",
-        "password": f"{os.getenv('pgpassword')}",
-        "port": f"{os.getenv('postgres_port')}",
-        "schema": f"{os.getenv('postgres_app_database')}",
+        "host": f"{os.getenv('POSTGRES_IP')}",
+        "login": f"{os.getenv('PGUSER')}",
+        "password": f"{os.getenv('PGPASSWORD')}",
+        "port": f"{os.getenv('POSTGRES_PORT')}",
+        "schema": f"{os.getenv('POSTGRES_APP_DATABASE')}",
     }
     aws_conn_config: dict = {
         "conn_id": "aws_connection",

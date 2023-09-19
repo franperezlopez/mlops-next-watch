@@ -26,6 +26,7 @@ dependencies: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.minimal
 	sudo curl -o ./assets/hadoop-aws-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar
 	sudo curl -o ./assets/aws-java-sdk-bundle-1.12.506.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.506/aws-java-sdk-bundle-1.12.506.jar
+	sudo curl -o ./assets/aws-java-sdk-core-1.12.506.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.12.506/aws-java-sdk-core-1.12.506.jar
 	sudo curl -o ./assets/hadoop-common-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar
 	sudo curl -o ./assets/postgresql-42.6.0.jar https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
 	#cp ./assets/hadoop-aws-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
@@ -56,6 +57,7 @@ run:
 
 ## Populate Databse with Users from production datasets
 users:
+	docker compose exec dev-spark bash -c "python3.9 src/main.py -p 'de'"
 	docker compose exec dev-spark bash -c "python3.9 src/scripts/populate_db_with_users.py"
 
 ## Run DE pipelines

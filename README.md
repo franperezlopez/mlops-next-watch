@@ -28,31 +28,45 @@ git clone https://github.com/brnaguiar/mlops-next-watch.git
 make env
 ```
 
-3. Install requirements / dependencies and assets
+3. Activate conda env
+```sh
+source activate nwenv
+```
+
+4. Install requirements / dependencies and assets
 ```sh
 make dependencies
 ```
 
-4. Pull the datasets
+5. Pull the datasets
 ```sh
 make datasets
 ```
 
-5. Configure containers and secrets
+6. Configure containers and secrets
 ```sh
 make init
 ```
 
-6. Run Docker Compose
+7. Run Docker Compose
 ```sh
 make run
 ```
 
-7. Populate production Database with users
+8. Populate production Database with users
 ```sh
 make users
 ```
 
+## Useful Service Endpoints
+```
+- Jupyter `http://localhost:8888`
+- Minio `http://localhost:9001`
+- MLFlow `http://localhost:5000`
+- FastAPI `http://localhost:8086/`
+- Streamlit UI `http://localhost:8501`
+- Grafana Dashboard `http://localhost:3000`
+```
 ## Architecture
 <img src="./images/project_diagram.jpg">
 <!-- #4. Create a `.env` file (`.env` sample below)#
