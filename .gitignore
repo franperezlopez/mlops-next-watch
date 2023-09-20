@@ -50,7 +50,7 @@ coverage.xml
 target/
 
 # DotEnv configuration
-.env
+# .env
 
 # Database
 *.db

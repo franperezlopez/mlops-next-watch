@@ -75,6 +75,7 @@ make users
 ## Architecture
 <img src="./images/project_diagram.jpg"/>
 
+
 ## Service Endpoints Showcase
 
 ### Streamlit Frontend App
@@ -106,58 +107,69 @@ make run
 -->
 
 <!-- PROJECT LOGO -->
-<!--
 Project Organization
 ------------
 
     ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
-    ├── README.md          <- The top-level README for developers using this project.
+    │
+    ├── Makefile             <- Makefile with commands like `make env` or `make run`
+    │
+    ├── README.md            <- The top-level README for developers using this project
+    │
     ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
+    │   ├── 01-external      <- Data from third party sources
+    │   ├── 01-raw           <- Data in a raw format
+    │   ├── 02-processed     <- The pre-processed data for modeling
+    │   └── 03-raw           <- Splitted Pre-Processed data for model training
+    ├── airflow
+    │   ├── dags             <- Airflow Dags
+    │   ├── logs             <- Airflow logging
+    │   ├── plugins          <- Airflow default directory for Plugins like Custom Operators, Sensors, etc... (however, we use the dir `include` in dags for this purpose)
+    │   └── config           <- Airflow Configurations and Settings
     │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
+    ├── assets               <- Project assets like jar files used in Spark Sessions
     │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    ├── models               <- Trained and serialized models, model predictions, or model summaries
     │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
+    ├── notebooks            <- Jupyter notebooks used in experimentation 
     │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
+    ├── docker               <- Docker data and configurations
     │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
+    ├── images               <- Project images
     │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
+    ├── requirements.local   <- Required Site-Packages 
+    │                         
+    ├── requirements.minimal <- Required Dist-Packages 
+    │                         
+    ├── Makefile             <- File containing rules and dependencies to automate building processes
     │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
+    ├── setup.py             <- makes project pip installable (pip install -e .) so src can be imported 
+    │
+    ├── src                  <- Source code for use in this project.
     │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
+    │   ├── collaborative    <- Source code for the collaborative recommendation strategy
+    │   │   └── models       <- Collaborative models
+    │   │   └── nodes        <- Data processing, validation, training, etc. functions (or nodes) that represent units of work.
+    │   │   └── pipelines    <- Collection of orquestrated data processing, validation, training, etc. nodes, arranged in a sequence or a directed acyclic graph (DAG)
     │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
+    │   ├── conf           <- Configuration files and parameters for the projects
     │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
+    │   ├── main.py        <- Main script, mostly to run pipelines
+    │   │
+    │   ├── scripts        <- Scripts, for instance, to create credentials files and populate databases
     │   │   ├── predict_model.py
     │   │   └── train_model.py
     │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
+    │   └── frontend       <- Source code for the Application Interface
+    │   │
+    │   └── utils          <- Project utils like Handlers and Controllers
     │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
+    └── tox.ini            <- Settings for flake8
+    │
+    └── pyproject.toml     <- Settings for the project, and tools like isort, black, pytest, etc.
 
 
 --------
--->
 
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. 
