@@ -76,36 +76,6 @@ make users
 <img src="./images/project_diagram.jpg"/>
 
 
-## Service Endpoints Showcase
-
-### Streamlit Frontend App
-<img src="./images/streamlit_ui.png"/>
-
-### MLflow UI
-<img src="./images/mlflow_ui.png"/>
-
-### Minio UI
-<img src="./images/minio_ui.png"/>
-
-### Airflow UI
-<img src="./images/airflow_ui.png"/>
-
-### Grafana UI
-<img src="./images/grafana_ui.png"/>
-
-### Prometheus UI
-<img src="./images/prometheus_ui.png"/>
-
-### Prometheus Drift Detection Example
-<img src="./images/prometheus_ui_drift_warning.png"/>
-
-<!-- #4. Create a `.env` file (`.env` sample below)#
-5. Run the the project!
-```sh
-make run
-```
--->
-
 <!-- PROJECT LOGO -->
 Project Organization
 ------------
@@ -168,6 +138,37 @@ Project Organization
     │
     └── pyproject.toml     <- Settings for the project, and tools like isort, black, pytest, etc.
 
+
+
+## Service Endpoints Showcase
+
+### Streamlit Frontend App
+<img src="./images/streamlit_ui.png"/>
+
+### MLflow UI
+<img src="./images/mlflow_ui.png"/>
+
+### Minio UI
+<img src="./images/minio_ui.png"/>
+
+### Airflow UI
+<img src="./images/airflow_ui.png"/>
+
+### Grafana UI
+<img src="./images/grafana_ui.png"/>
+
+### Prometheus UI
+<img src="./images/prometheus_ui.png"/>
+
+### Prometheus Drift Detection Example
+<img src="./images/prometheus_ui_drift_warning.png"/>
+
+<!-- #4. Create a `.env` file (`.env` sample below)#
+5. Run the the project!
+```sh
+make run
+```
+-->
 
 --------
 
