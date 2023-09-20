@@ -10,14 +10,14 @@ MLOps  MLOps project for movie recommendations. -->
 # Next Watch: E2E MLOps Pipelines with Spark!
 ![CI](https://github.com/brnaguiar/mlops-next-watch/actions/workflows/behavioral_tests.yml/badge.svg?event=push)
 
-<p><small><a href="#prereq">Prerequisites</a> <a href="#inst">Quick Start</a> <a href="#endpoints">Service Endpoints</a> <a href="#architecture">Architecture</a> <a href="#organization">Project Organization</a> <a href="#showcase">UI Showcase</a>. 
+<p><small><a href="#prereq">Prerequisites</a> | <a href="#inst">Quick Start</a> | <a href="#endpoints">Service Endpoints</a> | <a href="#architecture">Architecture</a> | <a href="#organization">Project Organization</a> | <a href="#showcase">UI Showcase</a>. 
 
-## Prerequisites {#prereq}
+<h2 id="prereq"> Prerequisites </h2>
 - Python
 - Conda or Venv
 - Docker
 
-## Installation and Quick Start {#inst}
+<h2 id="inst"> Installation and Quick Start </h2>
 1. Clone the repo
 ```sh
 git clone https://github.com/brnaguiar/mlops-next-watch.git
@@ -59,7 +59,7 @@ make run
 make users
 ```
 
-## Useful Service Endpoints {#endpoints}
+<h2 id="endpoints"> Useful Service Endpoints </h2>
 ```
 - Jupyter `http://localhost:8888`
 - MLFlow `http://localhost:5000`
@@ -73,12 +73,12 @@ make users
 - Spark UI `http://localhost:8081`
 ```
 
-## Architecture {#architecture}
+<h2 id="architecture"> Architecture </h2>
 <img src="./images/project_diagram.jpg"/>
 
 
 <!-- PROJECT LOGO -->
-Project Organization {#organization}
+<h2 id="organization"> Project Organization </h2>
 ------------
 
     ├── LICENSE
@@ -141,7 +141,7 @@ Project Organization {#organization}
 
 
 
-## UI Showcase {#showcase}
+<h2 id="showcase"> UI Showcase </h2>
 
 ### Streamlit Frontend App
 <img src="./images/streamlit_ui.png"/>
