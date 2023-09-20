@@ -13,11 +13,13 @@ MLOps  MLOps project for movie recommendations. -->
 <p><small><a href="#prereq">Prerequisites</a> | <a href="#inst">Quick Start</a> | <a href="#endpoints">Service Endpoints</a> | <a href="#architecture">Architecture</a> | <a href="#organization">Project Organization</a> | <a href="#showcase">UI Showcase</a>. 
 
 <h2 id="prereq"> Prerequisites </h2>
+
 - Python
 - Conda or Venv
 - Docker
 
 <h2 id="inst"> Installation and Quick Start </h2>
+
 1. Clone the repo
 ```sh
 git clone https://github.com/brnaguiar/mlops-next-watch.git
@@ -59,6 +61,8 @@ make users
 ```
 
 <h2 id="endpoints"> Useful Service Endpoints </h2>
+
+
 ```
 - Jupyter `http://localhost:8888`
 - MLFlow `http://localhost:5000`
@@ -78,6 +82,7 @@ make users
 
 <!-- PROJECT LOGO -->
 <h2 id="organization"> Project Organization </h2>
+
 ------------
 
     ├── LICENSE
