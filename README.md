@@ -21,7 +21,6 @@ MLOps  MLOps project for movie recommendations. -->
 1. Clone the repo
 ```sh
 git clone https://github.com/brnaguiar/mlops-next-watch.git
-
 ```
 
 2. Create environment
