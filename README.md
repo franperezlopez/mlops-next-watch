@@ -10,13 +10,14 @@ MLOps  MLOps project for movie recommendations. -->
 # Next Watch: E2E MLOps Pipelines with Spark!
 ![CI](https://github.com/brnaguiar/mlops-next-watch/actions/workflows/behavioral_tests.yml/badge.svg?event=push)
 
+<p><small><a href="#prereq">Prerequisites</a> <a href="#inst">Quick Start</a> <a href="#endpoints">Service Endpoints</a> <a href="#architecture">Architecture</a> <a href="#organization">Project Organization</a> <a href="#showcase">UI Showcase</a>. 
 
-## Prerequisites
+## Prerequisites {#prereq}
 - Python
 - Conda or Venv
 - Docker
 
-## Installation and Quick Start
+## Installation and Quick Start {#inst}
 1. Clone the repo
 ```sh
 git clone https://github.com/brnaguiar/mlops-next-watch.git
@@ -58,7 +59,7 @@ make run
 make users
 ```
 
-## Useful Service Endpoints
+## Useful Service Endpoints {#endpoints}
 ```
 - Jupyter `http://localhost:8888`
 - MLFlow `http://localhost:5000`
@@ -72,12 +73,12 @@ make users
 - Spark UI `http://localhost:8081`
 ```
 
-## Architecture
+## Architecture {#architecture}
 <img src="./images/project_diagram.jpg"/>
 
 
 <!-- PROJECT LOGO -->
-Project Organization
+Project Organization {#organization}
 ------------
 
     ├── LICENSE
@@ -140,7 +141,7 @@ Project Organization
 
 
 
-## Service Endpoints Showcase
+## UI Showcase {#showcase}
 
 ### Streamlit Frontend App
 <img src="./images/streamlit_ui.png"/>
