@@ -95,7 +95,7 @@ make users
     │   ├── 01-external      <- Data from third party sources
     │   ├── 01-raw           <- Data in a raw format
     │   ├── 02-processed     <- The pre-processed data for modeling
-    │   └── 03-raw           <- Splitted Pre-Processed data for model training
+    │   └── 03-train         <- Splitted Pre-Processed data for model training
     ├── airflow
     │   ├── dags             <- Airflow Dags
     │   ├── logs             <- Airflow logging
@@ -132,8 +132,6 @@ make users
     │   ├── main.py        <- Main script, mostly to run pipelines
     │   │
     │   ├── scripts        <- Scripts, for instance, to create credentials files and populate databases
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
     │   │
     │   └── frontend       <- Source code for the Application Interface
     │   │
