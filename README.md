@@ -118,7 +118,7 @@ make users
     │                         
     ├── Makefile             <- File containing rules and dependencies to automate building processes
     │
-    ├── setup.py             <- makes project pip installable (pip install -e .) so src can be imported 
+    ├── setup.py             <- Makes project pip installable (pip install -e .) so src can be imported 
     │
     ├── src                  <- Source code for use in this project.
     │   │
