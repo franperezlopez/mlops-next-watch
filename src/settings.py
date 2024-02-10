@@ -1,19 +1,21 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, SecretStr, computed_field
-from typing import List, Dict, Any, Optional, Union
+from pydantic import Field, computed_field
+from typing import List
 import enum
+from pathlib import Path
 
 class Pipelines(enum.Enum):
     TRAINING = "training"
     INFERENCE = "inference"
-    MONITOR = "monitodr"
+    MONITOR = "monitor"
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
     TARGET_COL: str = Field("cost")
+    PREDICTION_COL: str = Field("prediction")
 
     NUMERIC_COLS: List[str] = Field([
         "distance",
@@ -38,30 +40,15 @@ class Settings(BaseSettings):
 
     CAT_NOM_COLS: List[str] = Field(["store_forward", "vendor"])
 
-    CAT_ORD_COLS: List[str] = Field([])
-
     @computed_field
     @property
     def TRAIN_COLS(self) -> List[str]:
         return self.NUMERIC_COLS + self.CAT_NOM_COLS + self.CAT_ORD_COLS
     
-    SPLIT_TRAIN_FILE: str = Field("train.parquet")
-    SPLIT_VAL_FILE: str = Field("val.parquet")
-    SPLIT_TEST_FILE: str = Field("test.parquet")
+    MODEL_NAME: str = Field("taxi_fare_model")
 
-    TRAIN_MODEL_FILE: str = Field("model.joblib")
-    TRANSFORMER_FILE: str = Field("transformer.joblib")
-    # PREDICT_STAGE_FILE = "predict.parquet"
-    # EVAL_STAGE_FILE = "eval.parquet"
-
-    MODEL_NAME = "taxi_fare_model"
-
-    # def _get_metric_name(model_name=MODEL_NAME):
-    #     return f"r2_score_on_data_{model_name}_test"
-
-    # METRIC = _get_metric_name()
-
-    # METRIC_IMPROVEMENT_THRESHOLD = 5. # metric improvement percentage threshold
+    MONITOR_PATH: Path = Field(Path("../data/03-predictions"))
+    REFERENCE_PATH: Path = Field(Path("../data/02-processed"))
 
 @lru_cache
 def get_settings():

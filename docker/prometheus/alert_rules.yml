@@ -4,7 +4,7 @@ groups:
   rules:
   - alert: TargetDriftAlert
     expr: |
-      prediction_drift{job="evidently_metrics"} > 0.1
+      prediction_drift{job="evidently_metrics"} > 0.05
     for: 3m
     labels:
       severity: warning

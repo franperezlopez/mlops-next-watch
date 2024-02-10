@@ -5,7 +5,8 @@ scrape_configs:
   - job_name: 'evidently_metrics'
     honor_labels: true
     static_configs:
-      - targets: ['pushgateway:9091'] # hardcoded. because prometheus doesnt read env variables
+      - targets: ['fastapi:8000']
+    metrics_path: '/custom-metrics'
 
   - job_name: 'fastapi_app'
     static_configs:

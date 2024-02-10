@@ -1,24 +1,9 @@
-# black==22.12.0
 click
-# conda-pack==0.6.0
-# cookiecutter==2.1.1
-evidently
-# flake8==4.0
-hyperopt
-# isort==5.12.0
-mlflow
-python-dotenv
-jupyter
-ipykernel
+evidently==0.4.14
+mlflow==2.10.1
 scikit-learn==1.4.0
-# fsspec==2023.6.0
-pandas
-# aiobotocore==2.5
-# s3fs==2023.6.0
-psycopg2-binary
+pandas==2.2.0
 prometheus-client
 prometheus-fastapi-instrumentator
-# apache-airflow-providers-apache-spark==4.1.4
-pytest
 loguru==0.7.2
-pydantic-settings
+# pydantic-settings==2.1.0

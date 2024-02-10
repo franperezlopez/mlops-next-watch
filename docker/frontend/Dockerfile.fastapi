@@ -5,12 +5,15 @@ FROM python:3.9
 #COPY ./src /app/src
 
 
-WORKDIR /app/src/frontend
+WORKDIR /app
 
-ENV PYTHONPATH="../:$PYTHONPATH"
+ENV PYTHONPATH="/app/:$PYTHONPATH"
 
-RUN pip3 install fastapi==0.100.0 uvicorn==0.23.1 python-dotenv sqlalchemy==2.0.19 psycopg2==2.9.6 pandas==2.0.1 fsspec==2023.6.0 s3fs prometheus-fastapi-instrumentator==6.1.0
+COPY ./requirements/minimal.txt /app/requirements.txt
+
+RUN pip3 install -r /app/requirements.txt
+RUN pip3 install pydantic-settings==2.1.0 uvicorn
 
 EXPOSE 8000
 
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.frontend.api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
