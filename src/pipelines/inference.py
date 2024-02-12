@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Tuple
 import pandas as pd
-from src.services.mlflow import download_model
+from src.services.mlflow import Mlflow
 from src.settings import Settings
 from src.utils.pandas import pd_read
 from loguru import logger
@@ -13,7 +13,7 @@ class Predict(Pipeline):
     def __init__(self, settings: Settings):
         self.settings: Settings = settings
 
-    def run(self, file_path: Path) -> str:
+    def run(self, predict_file: Path) -> str:
             """
             Runs the inference pipeline on the given file.
 
@@ -23,7 +23,7 @@ class Predict(Pipeline):
             Returns:
                 str: The path to the saved predictions file.
             """
-            df = pd_read(file_path)
+            df = pd_read(predict_file)
             y_hat, runid = self._predict(df)
             self.settings.MONITOR_PATH.mkdir(parents=True, exist_ok=True)
             predict_file_path = self.settings.MONITOR_PATH / self._random_file_name()
@@ -43,7 +43,7 @@ class Predict(Pipeline):
         :type df: pd.DataFrame
         :return: A dataframe with the predicted values
         """
-        model, runid = download_model(self.settings.MODEL_NAME)
+        model, runid = Mlflow.download_model(self.settings.MODEL_NAME)
 
         y_hat = model.predict(df)
         return y_hat, runid

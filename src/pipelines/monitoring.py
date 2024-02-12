@@ -12,7 +12,7 @@ import mlflow
 from loguru import logger
 
 from src.pipelines import Pipeline
-from src.services.mlflow import get_dataset_path
+from src.services.mlflow import Mlflow
 from src.settings import Settings
 from src.utils.pandas import pd_read
 from src.services.prometheus import Monitoring
@@ -21,6 +21,7 @@ from src.services.prometheus import Monitoring
 class Monitor(Pipeline):
     def __init__(self, settings: Settings):
         self.settings: Settings = settings
+        Monitoring.initialize()
 
     def run(self):
             """
@@ -46,17 +47,13 @@ class Monitor(Pipeline):
                     df_reference[df_reference.runid == runid],
                 )
                 dataset_sources = self._create_dataset_sources(df_current, runid)
-                prometheus_metrics = self.update_run_with_monitoring(
-                    runid, dataset_sources, drift_report
-                )
+                prometheus_metrics = self._update_run_with_monitoring(runid, dataset_sources, drift_report)
                 Monitoring.create_prometheus_metrics(*prometheus_metrics)
 
     def _create_dataset_sources(self, df_current, runid):
         dataset_sources = [
                     mlflow.data.from_pandas(
-                        df_current[
-                            (df_current.runid == runid) & (df_current.filename == filename)
-                        ],
+                        df_current[(df_current.runid == runid) & (df_current.filename == filename)],
                         source=filename,
                         targets=self.settings.TARGET_COL,
                         name=f"reference_{filename}",
@@ -79,7 +76,7 @@ class Monitor(Pipeline):
         file_contents = []
         for runid in runids:
             # Get dataset from MLflow
-            dataset_path = get_dataset_path(runid)
+            dataset_path = Mlflow.get_dataset_path(runid)
             # Load dataset
             file_contents.append(pd_read(dataset_path).assign(runid=runid))
 
@@ -160,9 +157,7 @@ class Monitor(Pipeline):
                 }
                 return drifts
 
-    def update_run_with_monitoring(
-        self, runid: str, dataset_sources: list[str], drift_report: Report
-    ) -> tuple[float, float, float]:
+    def _update_run_with_monitoring(self, runid: str, dataset_sources: list[str], drift_report: Report) -> tuple[float, float, float]:
         # Update the run with monitoring results
         with mlflow.start_run(run_id=runid):
             with mlflow.start_run(nested=True):

@@ -6,42 +6,55 @@ import uuid
 
 def pd_read(input_file: Path) -> pd.DataFrame:
     """
-    Read a file into a pandas DataFrame depending on the input_file extension.
+    Read a file into a pandas DataFrame.
 
-    :param input_file: The path to the input file
-    :type input_file: Path
-    :return: A dataframe
+    Args:
+        input_file (Path): The path to the input file.
+
+    Returns:
+        pd.DataFrame: The DataFrame containing the data from the input file.
+
+    Raises:
+        ValueError: If the input file has an incorrect format.
     """
-    if input_file.suffix == ".csv":
-        df = pd.read_csv(input_file)
-    elif input_file.suffix == ".parquet":
-        df = pd.read_parquet(input_file)
-    else:
-        raise ValueError("input_file incorrect format")
+    match input_file.suffix:
+        case ".csv":
+            df = pd.read_csv(input_file)
+        case ".parquet":
+            df = pd.read_parquet(input_file)
+        case _:
+            raise ValueError("input_file incorrect format")
 
     return df
 
 
 def pd_write(df: pd.DataFrame, output_file: Path, **pandas_kwargs) -> pd.DataFrame:
     """
-    Write a pandas DataFrame to a file using the format specified in the output_file extension
-    
-    :param df: pd.DataFrame
-    :type df: pd.DataFrame
-    :param output_file: The file path to write the data to
-    :type output_file: Path
-    :return: The output file
+    Write a pandas DataFrame to a file.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to be written.
+        output_file (Path): The path to the output file.
+        **pandas_kwargs: Additional keyword arguments to be passed to the pandas writer.
+
+    Returns:
+        pd.DataFrame: The output DataFrame.
+
+    Raises:
+        ValueError: If the output_file has an incorrect format.
     """
-    if output_file.suffix == ".csv":
-        df.to_csv(output_file, index=False, **pandas_kwargs)
-    elif output_file.suffix == ".parquet":
-        df.to_parquet(output_file, **pandas_kwargs)
-    else:
-        raise ValueError("output_file incorrect format")
+    match output_file.suffix:
+        case ".csv":
+            df.to_csv(output_file, index=False, **pandas_kwargs)
+        case ".parquet":
+            df.to_parquet(output_file, **pandas_kwargs)
+        case _:
+            raise ValueError("output_file incorrect format")
 
     return output_file
 
-def pd_write_random(df: pd.DataFrame, directory: Path, extension: str = "csv", **pandas_kwargs) -> str:
+
+def pd_write_random(df: pd.DataFrame, directory: Path, extension: str = "csv", **pandas_kwargs) -> Path:
     """
     Write a pandas DataFrame to a random file in the specified directory.
 

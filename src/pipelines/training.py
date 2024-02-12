@@ -23,7 +23,7 @@ class Train(src_Pipeline):
     def __init__(self, settings: Settings):
         self.settings: Settings = settings
 
-    def run(self, raw_file: Optional[Path], model_parameters: Dict = {}):
+    def run(self, training_file: Path, model_parameters: Dict = {}):
             """
             Runs the training pipeline.
 
@@ -31,10 +31,17 @@ class Train(src_Pipeline):
                 raw_file (Optional[Path]): The path to the raw data file. If None, the default train raw file will be used.
                 model_parameters (Dict): Optional dictionary of model parameters.
             """
-            if raw_file is None:
-                raw_file = self.settings.DEFAULT_TRAIN_RAW_FILE
-            transformer, df_train, df_eval = self._prepare(raw_file)
-            self._train(raw_file, df_train, transformer, model_parameters)
+            mlflow.sklearn.autolog(
+                log_input_examples=True,
+                log_datasets=False,
+                log_model_signatures=False,
+                registered_model_name=self.settings.MODEL_NAME,
+            )
+            df_train, df_eval = self._read_and_split(training_file)
+            transformer = self._create_transformer()
+            _, runid = self._train_mlflow(training_file, df_train, transformer, model_parameters)
+            self._evaluate_mlflow(df_eval, runid)
+            mlflow.sklearn.autolog(disable=True)
 
     def _create_transformer(self) -> ColumnTransformer:
         preprocessor = ColumnTransformer(
@@ -61,10 +68,8 @@ class Train(src_Pipeline):
 
         return preprocessor
 
-    def _prepare(self, raw_file: str) -> Tuple[Pipeline, pd.DataFrame, pd.DataFrame]:
+    def _read_and_split(self, raw_file: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
         df_raw = pd_read(raw_file)
-
-        transformer = self._create_transformer()
 
         X_train, X_test, y_train, y_test = train_test_split(
             df_raw.drop(columns=[self.settings.TARGET_COL]),
@@ -73,72 +78,81 @@ class Train(src_Pipeline):
             random_state=42,
         )
 
-        # X_train = transformer.fit_transform(X_train)
-        # X_test = transformer.transform(X_test)
-
         return (
-            transformer,
             pd.concat([X_train, y_train], axis=1),
             pd.concat([X_test, y_test], axis=1),
         )
 
-    def _train(
+    def _train_mlflow(
         self,
-        raw_file: str,
+        raw_file: Path,
         train_data: pd.DataFrame,
         transformer: Optional[Any],
         model_parameters: Dict = {},
-    ) -> str:
-        with mlflow.start_run():
-            mlflow.sklearn.autolog(
-                log_input_examples=True,
-                log_datasets=False,
-                log_model_signatures=False,
-                registered_model_name=self.settings.MODEL_NAME,
-            )
+    ) -> Tuple[Pipeline, str]:
+        """
+        Trains a model using MLflow and logs the training data and reference data.
 
-            model, _, y_predict = self.train(train_data, transformer, model_parameters)
+        Args:
+            raw_file (str): The path to the raw data file.
+            train_data (pd.DataFrame): The training data.
+            transformer (Optional[Any]): The transformer object for data preprocessing.
+            model_parameters (Dict, optional): Additional parameters for the model. Defaults to {}.
+
+        Returns:
+            Tuple[Pipeline, str]: A tuple containing the trained model and the MLflow run ID.
+        """
+        with mlflow.start_run():
+            model, _, y_predict = self._train_model(train_data, transformer, model_parameters)
             reference_file = pd_write_random(
                 train_data.assign(prediction=y_predict),
                 self.settings.REFERENCE_PATH,
                 extension="csv",
             )
-            logger.info(f"reference file: {reference_file}")
-            # set_signature('mlflow-artifacts:/model', infer_signature(train_data.drop(columns=self.settings.TARGET_COL), y_predict))
-            mlflow.log_input(
-                mlflow.data.from_pandas(
-                    train_data,
-                    source=raw_file,
-                    targets=self.settings.TARGET_COL,
-                    name="training",
-                ),
-                context="training",
-            )
-            mlflow.log_input(
-                mlflow.data.from_pandas(
-                    train_data.assign(prediction=y_predict),
-                    source=reference_file,
-                    targets=self.settings.TARGET_COL,
-                    name="reference",
-                ),
-                context="training",
-            )
+            training_dataset = mlflow.data.from_pandas(train_data,
+                                              source=raw_file.absolute().resolve(),
+                                              targets=self.settings.TARGET_COL,
+                                              name="training")
+            logger.info(f"training file: {training_dataset.source.uri}")
+            mlflow.log_input(dataset=training_dataset, context="training")
+            reference_dataset = mlflow.data.from_pandas(train_data.assign(prediction=y_predict),
+                                              source=reference_file.absolute().resolve(),
+                                              targets=self.settings.TARGET_COL,
+                                              name="reference")
+            logger.info(f"reference file: {reference_dataset.source.uri}")
+            mlflow.log_input(dataset=reference_dataset, context="training")
 
             run_id = mlflow.active_run().info.run_id
-            return run_id
+            logger.info(f"MLflow run ID: {run_id}")
+            return model, run_id
 
-    def train(
-        self, df_train: pd.DataFrame, pipeline: Pipeline, model_parameters: Dict = {}
-    ) -> Tuple[Pipeline, pd.DataFrame, np.ndarray]:
+    def _evaluate_mlflow(self, df_eval: pd.DataFrame, runid: str):
+            """
+            Evaluate the MLflow model using the provided evaluation dataset.
+
+            Args:
+                df_eval (pd.DataFrame): The evaluation dataset.
+                runid (str): The ID of the MLflow run.
+
+            Returns:
+                None
+            """
+            with mlflow.start_run(run_id=runid):
+                model_uri = f"runs:/{runid}/model"
+                mlflow.evaluate(model_uri, data=df_eval, targets=self.settings.TARGET_COL,
+                    model_type="regressor", evaluator_config={"log_model_explainability": False})
+
+    def _train_model(self, df_train: pd.DataFrame, pipeline: Pipeline, model_parameters: Dict = {}) -> Tuple[Pipeline, pd.DataFrame, np.ndarray]:
         """
-        The function takes in a dataframe and a dictionary of model parameters, and returns a trained
-        model
+        Trains a model using the provided training data and pipeline.
 
-        :param df_train: The training dataframe
-        :type df_train: pd.DataFrame
-        :param model_parameters: Dict
-        :type model_parameters: Dict
-        :return: The model object
+        Args:
+            df_train (pd.DataFrame): The training dataset.
+            pipeline (Pipeline): The data preprocessing pipeline.
+            model_parameters (Dict, optional): Additional parameters for the model. Defaults to {}.
+
+        Returns:
+            Tuple[Pipeline, pd.DataFrame, np.ndarray]: A tuple containing the trained pipeline model, the input data, and the predicted output.
         """
         # Split the data into input(X) and output(y)
         y_train = df_train[self.settings.TARGET_COL]
@@ -154,4 +168,3 @@ class Train(src_Pipeline):
 
         pipeline.set_output(transform="pandas")
         return pipeline_model, X_train, y_predict
-

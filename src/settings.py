@@ -2,13 +2,7 @@ from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, computed_field
 from typing import List
-import enum
 from pathlib import Path
-
-class Pipelines(enum.Enum):
-    TRAINING = "training"
-    INFERENCE = "inference"
-    MONITOR = "monitor"
 
 
 class Settings(BaseSettings):
