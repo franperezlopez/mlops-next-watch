@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     
     MODEL_NAME: str = Field("taxi_fare_model")
 
-    MONITOR_PATH: Path = Field(Path("../data/03-predictions"))
-    REFERENCE_PATH: Path = Field(Path("../data/02-processed"))
+    MONITOR_PATH: Path = Field(Path("data/03-predictions"))
+    REFERENCE_PATH: Path = Field(Path("data/02-processed"))
 
 @lru_cache
 def get_settings():

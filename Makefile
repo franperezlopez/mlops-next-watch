@@ -21,34 +21,17 @@ endif
 
 ## Install Python Dependencies
 dependencies: test_environment
-	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.local
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.minimal
-	sudo curl -o ./assets/hadoop-aws-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar
-	sudo curl -o ./assets/aws-java-sdk-bundle-1.12.506.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.506/aws-java-sdk-bundle-1.12.506.jar
-	sudo curl -o ./assets/aws-java-sdk-core-1.12.506.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.12.506/aws-java-sdk-core-1.12.506.jar
-	sudo curl -o ./assets/hadoop-common-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar
-	sudo curl -o ./assets/postgresql-42.6.0.jar https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
-	#cp ./assets/hadoop-aws-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
-	#cp ./assets/aws-java-sdk-bundle-1.12.506.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
-	#cp ./assets/hadoop-common-3.3.4.jar ~/$(CONDA_FOLDER_NAME)/envs/next-watch/lib/python3.10/site-packages/pyspark/jars/
+	$(PYTHON_INTERPRETER) -m pip install -r requirements/local.txt
+	$(PYTHON_INTERPRETER) -m pip install -r requirements/minimal.txt
+	$(PYTHON_INTERPRETER) -m pip install -r requirements/development.txt
 
 ## Generate requirements for distributable packages.jar
 envfile:
 	pip list --format=freeze > requirements.dist
 
-## Pull datasets from sources
-datasets:
-	curl -o data/01-external/ml-100k.zip https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
-	unzip -j data/01-external/ml-100k.zip "ml-latest-small/*" -d data/01-external/movielens
-	rm data/01-external/ml-100k.zip
-
 ## Config databases, init programs, etc...
 init:
-	echo "AIRFLOW_UID=$$(id -u)" >> .env
 	docker compose build --no-cache
-	docker compose up postgres create-databases airflow-init --exit-code-from airflow-init
-	$(PYTHON_INTERPRETER) src/scripts/create_aws_credentials_file.py
 	docker compose down --volumes --remove-orphans
 
 ## Run Docker Compose
@@ -106,6 +89,9 @@ endif
 ## Test python environment is setup correctly
 test_environment:
 	$(PYTHON_INTERPRETER) test_environment.py
+
+fastapi:
+	uvicorn src.frontend.api:app --host 0.0.0.0 --port 8000 --reload
 
 #################################################################################
 # PROJECT RULES                                                                 #

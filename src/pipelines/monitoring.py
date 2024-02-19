@@ -42,23 +42,21 @@ class Monitor(Pipeline):
             df_reference = self._get_reference_data(runids)
             for runid in runids:
                 logger.info(f"Reporting runid {runid}")
-                drift_report = self._build_report(
-                    df_current[df_current.runid == runid],
-                    df_reference[df_reference.runid == runid],
-                )
-                dataset_sources = self._create_dataset_sources(df_current, runid)
+                drift_report = self._build_report(df_current[df_current.runid == runid],
+                                                  df_reference[df_reference.runid == runid])
+                dataset_sources = self._create_dataset_sources(df_current[df_current.runid == runid])
                 prometheus_metrics = self._update_run_with_monitoring(runid, dataset_sources, drift_report)
                 Monitoring.create_prometheus_metrics(*prometheus_metrics)
 
-    def _create_dataset_sources(self, df_current, runid):
+    def _create_dataset_sources(self, df_current_by_runid):
         dataset_sources = [
                     mlflow.data.from_pandas(
-                        df_current[(df_current.runid == runid) & (df_current.filename == filename)],
+                        df_current_by_runid[df_current_by_runid.filename == filename],
                         source=filename,
                         targets=self.settings.TARGET_COL,
                         name=f"reference_{filename}",
                     )
-                    for filename in df_current[df_current.runid == runid].filename.unique()
+                    for filename in df_current_by_runid.filename.unique()
                 ]
         
         return dataset_sources
@@ -167,14 +165,11 @@ class Monitor(Pipeline):
 
                 # Log the drift report
                 features_drift = self._detect_features_drift(drift_report)
-                for feature, (score, detected) in features_drift.items():
+                for feature, (score, _) in features_drift.items():
                     mlflow.log_metric(feature, score)
-                    # mlflow.log_metric(f"{feature}_drift_detected", detected)
                 dataset_drift = self._detect_dataset_drift(drift_report, get_ratio=True)
                 mlflow.log_metric("dataset_drift_share", dataset_drift)
 
-                return (
-                    features_drift[self.settings.TARGET_COL][0],
-                    features_drift[self.settings.PREDICTION_COL][0],
-                    dataset_drift,
-                )
+                return (features_drift[self.settings.TARGET_COL][0],
+                        features_drift[self.settings.PREDICTION_COL][0],
+                        dataset_drift)

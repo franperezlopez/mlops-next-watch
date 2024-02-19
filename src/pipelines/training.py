@@ -110,13 +110,13 @@ class Train(src_Pipeline):
                 extension="csv",
             )
             training_dataset = mlflow.data.from_pandas(train_data,
-                                              source=raw_file.absolute().resolve(),
+                                              source=raw_file,
                                               targets=self.settings.TARGET_COL,
                                               name="training")
             logger.info(f"training file: {training_dataset.source.uri}")
             mlflow.log_input(dataset=training_dataset, context="training")
             reference_dataset = mlflow.data.from_pandas(train_data.assign(prediction=y_predict),
-                                              source=reference_file.absolute().resolve(),
+                                              source=reference_file,
                                               targets=self.settings.TARGET_COL,
                                               name="reference")
             logger.info(f"reference file: {reference_dataset.source.uri}")
